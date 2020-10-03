@@ -37,6 +37,7 @@ class App extends Component {
     autoDiscovery: false,
     showAdvanced: false,
     mergeData: false,
+    message: ""
   }
 
   excludeTagNegtag = (data) => {
@@ -65,6 +66,16 @@ class App extends Component {
     if (this.state.tagModeEnabled) {
       filtered = this.excludeTagNegtag(filtered)
     }
+    filtered = filtered.sort((a, b) => {
+      const distDiff = a.get('distance') - b.get('distance')
+      if (distDiff === 0) {
+        return 0
+      } else if (distDiff < 0) {
+        return 1
+      } else {
+        return -1
+      }
+    })
     this.setState({
       filteredData: filtered
     })
@@ -171,6 +182,11 @@ class App extends Component {
     })
   }
 
+  isInternalLink = (link) => {
+    const r = new RegExp('^(?:[a-z]+:)?//', 'i');
+    return !r.test(link)
+  }
+
   handleTagSelectorTextChange = (event) => {
     this.setState({
       tagSelector: event.target.value
@@ -196,9 +212,9 @@ class App extends Component {
   };
 
   handleSearchClick = (index) => {
-    console.log(index)
-    console.log(this.state.filteredData)
-    this.handlePostData([this.state.filteredData.get(index).get('url')]);
+    const url = this.state.filteredData.get(index).get('url')
+    this.setState({initialImage: url})
+    this.handlePostData(url);
   };
 
   handleNestDataClick = () => {
@@ -252,18 +268,23 @@ class App extends Component {
     this.setState({APIRadius: event.target.value})
   };
 
-  handlePostData = async (urls=null) => {
-    if ((!this.state.file) && urls===null) {
+  handlePostData = async (url=null) => {
+    if ((!this.state.file) && url===null) {
       alert("No file to upload")
       return 0
     }
     this.setState({spinner: true})
     console.log("Sending data")
     let data
-    if (urls===null) {
+    if (this.isInternalLink(url)) {
       data = await getImgsFromImg(this.state.APIRadius, this.state.file)
     } else {
-      data = await getImgsFromImg(this.state.APIRadius, null, urls)
+      data = await getImgsFromImg(this.state.APIRadius, null, [url])
+    }
+    if (data.size === 0) {
+      this.setState({message: "Ничего не найдено. Попробуйте уменьшить схожесть лица."})
+    } else {
+      this.setState({message: ""})
     }
     if (this.state.mergeData) {
       data = data.merge(this.state.data);
@@ -328,7 +349,7 @@ class App extends Component {
               <Grid item>
               <Button variant="contained"
                       size="small"
-                      onClick={() => this.handlePostData()}>Найти похожие лица</Button>
+                      onClick={() => this.handlePostData(this.state.initialImage)}>Найти похожие лица</Button>
               </Grid>
               <Grid item>
                 {this.state.spinner ?
@@ -337,13 +358,13 @@ class App extends Component {
                     null
                 }
               </Grid>
-              <Grid item>
-                <FormControlLabel
-                    control={<Switch checked={this.state.showAdvanced}
-                                     onChange={this.handleShowAdvancedChange}/>}
-                    label="Продвинутые настройки"
-                />
-              </Grid>
+              {/*<Grid item>*/}
+              {/*  <FormControlLabel*/}
+              {/*      control={<Switch checked={this.state.showAdvanced}*/}
+              {/*                       onChange={this.handleShowAdvancedChange}/>}*/}
+              {/*      label="Продвинутые настройки"*/}
+              {/*  />*/}
+              {/*</Grid>*/}
 
             </Grid>
           </Grid>
@@ -362,6 +383,8 @@ class App extends Component {
             </div>
           }
 
+          <div justify="center">{this.state.message}</div>
+          <p />
           <ImgGrid data={this.state.filteredData}
                    search={this.handleSearchClick}
                    tagClick={this.handleRowRemoval}

@@ -23,7 +23,7 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
         let result = await response.json();
         console.log(result)
 
-        const data = {}
+        let data = {}
         Object.values(result[0].metadata).forEach((v, i) => {
             const frameId = (v.file_path.split("/")[3] +
                 "/" +
@@ -36,7 +36,7 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
                 key: key,
                 date: new Date(v.appearance_time),
                 box: JSON.parse(v.object_box),
-                objectsInFrame: v.objects_in_frame,
+                facesInFrame: v.objects_in_frame,
                 url: ("https://kloopstorage.blob.core.windows.net/activ-sync/" +
                     frameId + ".jpg"),
                 distance: v.distance,
@@ -46,12 +46,11 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
             data[key] = img
         })
 
-        console.log(data)
         return Map(data)
 
     } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Ошибка:', error)
+        alert('Пожалуйста убедитесь, что на фото есть одно лицо, и что ваше Интернет-соединение стабильно.', error)
+        return Map({})
     }
 }
 
