@@ -35,7 +35,8 @@ class App extends Component {
     APIRadius: 0.7,
     spinner: false,
     autoDiscovery: false,
-    showAdvanced: false
+    showAdvanced: false,
+    mergeData: false,
   }
 
   excludeTagNegtag = (data) => {
@@ -264,8 +265,10 @@ class App extends Component {
     } else {
       data = await getImgsFromImg(this.state.APIRadius, null, urls)
     }
-    const mergedData = data.merge(this.state.data);
-    this.setState({data: mergedData})
+    if (this.state.mergeData) {
+      data = data.merge(this.state.data);
+    }
+    this.setState({data: data})
     this.allFilter()
     this.setState({spinner: false})
   }

@@ -10,7 +10,7 @@ const areEqual = (prevProps, nextProps) => {
 }
 
 const ImgGrid = (props) => (
-    <Grid container justifyContent="center" justifyContent="center" spacing={2}>
+    <Grid container justify="center" spacing={2}>
         {props.data.map((img_data, i) => (
             <Grid item key={img_data.get('key')}>
                 <Card style={{width: 400}}>
