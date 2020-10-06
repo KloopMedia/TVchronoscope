@@ -13,6 +13,8 @@ import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
 import Switch from "@material-ui/core/Switch";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import { AuthContext } from './util/Auth';
+import firebase from './util/Firebase'
 
 class App extends Component {
 
@@ -97,7 +99,7 @@ class App extends Component {
     }
   }
 
-  tagRow = (action, index) => {
+  tagRow = async (action, index) => {
     if (this.state.tag !== "") {
       let data = this.state.data;
       const row = this.getUpdatedTags(action,
@@ -114,8 +116,48 @@ class App extends Component {
       this.setState({
         filteredData: this.state.filteredData.delete(index)
       })
+
+      await this.updateFirestore(action, row, this.state.tag)
+
     } else {
       alert('Fill TAG field')
+    }
+  }
+
+  updateFirestore = async (action, row, tag) => {
+    let docExist = false
+    const docKey = row.get("key")
+    let rootRef = firebase.firestore().collection("frames")
+    let frameRef = rootRef.doc(docKey.replaceAll("/", "#"))
+    await frameRef.get().then(doc => {
+      if (doc && doc.exists) {
+        docExist = true
+      }
+    })
+
+    if (action === 'tag') {
+      const docData = {
+        tags: firebase.firestore.FieldValue.arrayUnion(tag),
+        negtags: firebase.firestore.FieldValue.arrayRemove(tag)
+      }
+      if (docExist) {
+        frameRef.update(docData)
+      }
+      else {
+        frameRef.set(docData)
+      }
+      
+    } else if (action === 'negtag') {
+      const docData = {
+        tags: firebase.firestore.FieldValue.arrayRemove(tag),
+        negtags: firebase.firestore.FieldValue.arrayUnion(tag)
+      }
+      if (docExist) {
+        frameRef.update(docData)
+      }
+      else {
+        frameRef.set(docData)
+      }
     }
   }
 
@@ -289,12 +331,29 @@ class App extends Component {
     if (this.state.mergeData) {
       data = data.merge(this.state.data);
     }
+
+    let rootRef = firebase.firestore().collection("frames")
+    await rootRef.get().then(snapshot => {
+      snapshot.forEach(doc => {
+        // console.log(doc.id, " => ", doc.data());
+        let key = doc.id.replaceAll("#", "/")
+        if (data.has(key)) {
+          // console.log("BEFORE", data.get(key).toJS())
+          data = data.setIn([key, 'tags'], List(doc.data().tags))
+          data = data.setIn([key, 'negtags'], List(doc.data().negtags))
+          // console.log("AFTER", data.get(key).toJS())
+        }
+      })
+    })
+
     this.setState({data: data})
     this.allFilter()
     this.setState({spinner: false})
   }
 
   // Photo methods end
+
+  static contextType = AuthContext
 
   render() {
     let charts = null;
@@ -317,7 +376,12 @@ class App extends Component {
 
     return (
         <div className="App">
-
+          {this.context.currentUser
+              ? <Button style={{ position: 'absolute', right: '1%', top: '2%' }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
+                выход
+          </Button>
+              : null
+          }
           <Grid container
                 direction="column"
                 alignItems="center"
