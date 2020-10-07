@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import { extent, nest, timeFormat, sum, timeDays, range } from 'd3';
 import { Button, Grid, TextField, CircularProgress } from '@material-ui/core';
-import { List } from 'immutable';
+import { List, Set, Map } from 'immutable';
 import loadImage from 'blueimp-load-image';
 
 
@@ -19,7 +19,7 @@ import firebase from './util/Firebase'
 class App extends Component {
 
   state = {
-    data: new Map(),
+    data: Map(),
     filteredData: List([]),
     timeFilteredData: List([]),
     tag: "",
@@ -37,9 +37,33 @@ class App extends Component {
     APIRadius: 0.7,
     spinner: false,
     autoDiscovery: false,
-    showAdvanced: false,
+    showAdvanced: true,
     mergeData: false,
-    message: ""
+    message: "",
+    pageSlice: null
+  }
+
+  frameListener = firebase.firestore().collection("frames")
+  componentDidMount() {
+    this.frameListener.orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
+      if (!this.state.data.isEmpty()) {
+        let data = this.state.data
+        querySnapshot.forEach((doc) => {
+            console.log(doc.data())
+            let key = doc.id.replaceAll("#", "/")
+            if (data.has(key)) {
+              data = data.setIn([key, 'tags'], Set(doc.data().tags))
+              data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
+            }
+        });
+        this.setState({data: data})
+        this.allFilter(data.toList(), true)
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.frameListener()
   }
 
   excludeTagNegtag = (data) => {
@@ -57,13 +81,18 @@ class App extends Component {
     return result
   }
 
-  allFilter = (data=null) => {
+  allFilter = (data=null, ignoreTag=false) => {
     let filtered = data
+    let tag = this.state.tag
     if (!filtered) {
       filtered = this.state.data.toList()
     }
-    if (this.state.tag.length > 0) {
-      filtered = filtered.filter(d => d.get("tags").includes(this.state.tag));
+    if (tag.length > 0) {
+      if (ignoreTag) {
+        filtered = filtered.filter(d => d.get("tags"))
+      } else {
+        filtered = filtered.filter(d => d.get("tags").includes(tag));
+      }
     }
     if (this.state.tagModeEnabled) {
       filtered = this.excludeTagNegtag(filtered)
@@ -86,20 +115,20 @@ class App extends Component {
   tagAll = (action) => {
     if (this.state.tag !== "") {
       let data = this.state.data;
-      this.state.filteredData.forEach((d, i) => {
-        d = this.getUpdatedTags(action,
-            this.state.filteredData.get(i),
+      this.state.pageSlice.forEach((row, i) => {
+        let d = this.getUpdatedTags(action,
+            row,
             this.state.tag)
         data = data.set(d.get("key"), d)
       })
       this.setState({data: data})
-      this.allFilter(this.state.filteredData.map(d => data.get(d.get("key"))))
+      this.allFilter(data.toList(), true)
     } else {
       alert('Fill TAG field')
     }
   }
 
-  tagRow = async (action, index) => {
+  tagRow = (action, index) => {
     if (this.state.tag !== "") {
       let data = this.state.data;
       const row = this.getUpdatedTags(action,
@@ -116,8 +145,6 @@ class App extends Component {
       this.setState({
         filteredData: this.state.filteredData.delete(index)
       })
-
-      await this.updateFirestore(action, row, this.state.tag)
 
     } else {
       alert('Fill TAG field')
@@ -138,7 +165,8 @@ class App extends Component {
     if (action === 'tag') {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayUnion(tag),
-        negtags: firebase.firestore.FieldValue.arrayRemove(tag)
+        negtags: firebase.firestore.FieldValue.arrayRemove(tag),
+        modified: firebase.firestore.FieldValue.serverTimestamp()
       }
       if (docExist) {
         frameRef.update(docData)
@@ -150,7 +178,8 @@ class App extends Component {
     } else if (action === 'negtag') {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayRemove(tag),
-        negtags: firebase.firestore.FieldValue.arrayUnion(tag)
+        negtags: firebase.firestore.FieldValue.arrayUnion(tag),
+        modified: firebase.firestore.FieldValue.serverTimestamp()
       }
       if (docExist) {
         frameRef.update(docData)
@@ -169,6 +198,7 @@ class App extends Component {
       row = row.update("negtags", d => d.add(tag))
       row = row.update("tags", d => d.delete(tag))
     }
+    this.updateFirestore(action, row, this.state.tag)
     return row;
   }
 
@@ -339,8 +369,8 @@ class App extends Component {
         let key = doc.id.replaceAll("#", "/")
         if (data.has(key)) {
           // console.log("BEFORE", data.get(key).toJS())
-          data = data.setIn([key, 'tags'], List(doc.data().tags))
-          data = data.setIn([key, 'negtags'], List(doc.data().negtags))
+          data = data.setIn([key, 'tags'], Set(doc.data().tags))
+          data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
           // console.log("AFTER", data.get(key).toJS())
         }
       })
@@ -352,6 +382,10 @@ class App extends Component {
   }
 
   // Photo methods end
+
+  returnPageSlice = (pageSlice) => {
+    this.setState({pageSlice: pageSlice})
+  }
 
   static contextType = AuthContext
 
@@ -452,7 +486,11 @@ class App extends Component {
           <ImgGrid data={this.state.filteredData}
                    search={this.handleSearchClick}
                    tagClick={this.handleRowRemoval}
-          showAdvanced={this.state.showAdvanced}/>
+          showAdvanced={this.state.showAdvanced}
+          returnRowsPerPage={this.returnRowsPerPage}
+          returnCurrentPage={this.returnCurrentPage}
+          returnPageSlice={this.returnPageSlice}
+          />
         </div>
     );
   }

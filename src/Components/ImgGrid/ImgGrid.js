@@ -47,6 +47,10 @@ const ImgGrid = props => {
     }, [props.data]);
 
 
+    useEffect(() => {
+        props.returnPageSlice(dataSlice)
+    }, [dataSlice])
+
     const pagination = props.data.size > 0 && (
         <TablePagination
             justify="center"
