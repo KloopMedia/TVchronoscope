@@ -43,7 +43,8 @@ class App extends Component {
     pageSlice: null
   }
 
-  frameListener = firebase.firestore().collection("frames")
+  // To do: change currentUser.uid to current system id
+  frameListener = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid).collection("frames")
   componentDidMount() {
     this.frameListener.orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
       if (!this.state.data.isEmpty()) {
@@ -155,8 +156,17 @@ class App extends Component {
   updateFirestore = async (action, row, tag) => {
     let docExist = false
     const docKey = row.get("key")
-    let rootRef = firebase.firestore().collection("frames")
-    let frameRef = rootRef.doc(docKey.replaceAll("/", "#"))
+    // To do: change currentUser.uid to current system id
+    let rootRef = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid)
+    rootRef.get().then(doc => {
+      if (doc && doc.exists) {
+
+      }
+      else {
+        rootRef.set({admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)})
+      }
+    })
+    let frameRef = rootRef.collection("frames").doc(docKey.replaceAll("/", "#"))
     await frameRef.get().then(doc => {
       if (doc && doc.exists) {
         docExist = true
@@ -363,8 +373,9 @@ class App extends Component {
       data = data.merge(this.state.data);
     }
 
-    let rootRef = firebase.firestore().collection("frames")
-    await rootRef.get().then(snapshot => {
+    // To do: change currentUser.uid to current system id
+    let frameRef = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid).collection("frames")
+    await frameRef.get().then(snapshot => {
       snapshot.forEach(doc => {
         // console.log(doc.id, " => ", doc.data());
         let key = doc.id.replaceAll("#", "/")
@@ -386,6 +397,20 @@ class App extends Component {
 
   returnPageSlice = (pageSlice) => {
     this.setState({pageSlice: pageSlice})
+  }
+
+  createTagSystem = () => {
+    let rootRef = firebase.firestore().collection("tagSystems")
+    rootRef.add(
+      {
+        createdBy: this.context.currentUser.email,
+        admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
+      }
+    ).then(doc => {
+      let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+      userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion(doc.id)})
+      console.log("Tag System successfuly created")
+    })
   }
 
   static contextType = AuthContext
@@ -436,6 +461,11 @@ class App extends Component {
               }
             </Grid>
             <p />
+            <Grid container>
+              <Grid item>
+                <Button onClick={this.createTagSystem}>Create Tag System</Button>
+              </Grid>
+            </Grid>
             <Grid container justify="center" spacing={2}>
               <Grid item>
               <TextField variant="outlined"
