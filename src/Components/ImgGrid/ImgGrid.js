@@ -43,7 +43,7 @@ const ImgGrid = props => {
 
     useEffect(() => {
         // Update the document title using the browser API
-        setDataSlice(calculateSlice(0, rowsPP, props.data));
+        setDataSlice(calculateSlice(page, rowsPP, props.data));
     }, [props.data]);
 
 

@@ -132,7 +132,7 @@ class App extends Component {
     if (this.state.tag !== "") {
       let data = this.state.data;
       const row = this.getUpdatedTags(action,
-          this.state.filteredData.get(index),
+          this.state.pageSlice.get(index),
           this.state.tag)
       data = data.set(row.get("key"), row)
 
@@ -142,9 +142,10 @@ class App extends Component {
       // this.setState({
       //   filteredData: data
       // })
-      this.setState({
-        filteredData: this.state.filteredData.delete(index)
-      })
+      // this.setState({
+      //   filteredData: this.state.filteredData.delete(index)
+      // })
+      this.allFilter(data.toList(), true)
 
     } else {
       alert('Fill TAG field')
@@ -377,7 +378,7 @@ class App extends Component {
     })
 
     this.setState({data: data})
-    this.allFilter()
+    this.allFilter(data.toList(), true)
     this.setState({spinner: false})
   }
 
