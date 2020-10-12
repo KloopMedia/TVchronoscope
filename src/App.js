@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import { extent, nest, timeFormat, sum, timeDays, range } from 'd3';
-import { Button, Grid, TextField, CircularProgress } from '@material-ui/core';
+import { Button, Grid, TextField, CircularProgress, Typography } from '@material-ui/core';
 import { List, Set, Map } from 'immutable';
 import loadImage from 'blueimp-load-image';
 
@@ -11,6 +11,7 @@ import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
 import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
+import Appbar from "./Components/Appbar/Appbar"
 
 import Switch from "@material-ui/core/Switch";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -505,12 +506,8 @@ class App extends Component {
 
     return (
         <div className="App">
-          {this.context.currentUser
-              ? <Button style={{ position: 'absolute', right: '1%', top: '2%' }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
-                выход
-          </Button>
-              : null
-          }
+          <Appbar />
+          <Typography style={{padding: 5}}>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
           <Grid container
                 direction="column"
                 alignItems="center"
@@ -530,6 +527,7 @@ class App extends Component {
               }
             </Grid>
             <p />
+            <Typography style={{padding: 15}}>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
             <Grid container justify="center" spacing={2}>
               <Grid item>
               <TextField variant="outlined"
@@ -551,18 +549,18 @@ class App extends Component {
                     null
                 }
               </Grid>
-              {/* <Grid item>
+              <Grid item>
                <FormControlLabel
                     control={<Switch checked={this.state.showAdvanced}
                                      onChange={this.handleShowAdvancedChange}/>}
                     label="Продвинутые настройки"
                 />
-              </Grid> */}
+              </Grid>
 
             </Grid>
           </Grid>
           <p />
-          {/* {this.state.showAdvanced &&
+          {this.state.showAdvanced &&
             <div>
               <TagData justify="center"
                        tagModeEnabled={this.state.tagModeEnabled}
@@ -608,7 +606,7 @@ class App extends Component {
               <Button onClick={this.handleShowCharts}>Show charts</Button>
               {charts}
             </div>
-          } */}
+          }
 
           <div justify="center">{this.state.message}</div>
           <p />
