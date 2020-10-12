@@ -549,13 +549,13 @@ class App extends Component {
                     null
                 }
               </Grid>
-              <Grid item>
+              {/* <Grid item>
                <FormControlLabel
                     control={<Switch checked={this.state.showAdvanced}
                                      onChange={this.handleShowAdvancedChange}/>}
                     label="Продвинутые настройки"
                 />
-              </Grid>
+              </Grid> */}
 
             </Grid>
           </Grid>
