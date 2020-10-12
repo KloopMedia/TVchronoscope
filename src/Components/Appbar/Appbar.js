@@ -32,7 +32,7 @@ const useStyles = makeStyles(theme => ({
 
 
 const Appbar = (props) => {
-    const { currentUser } = useContext(AuthContext);
+    // const { currentUser } = useContext(AuthContext);
     const classes = useStyles();
 
     return (
@@ -42,7 +42,7 @@ const Appbar = (props) => {
             {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
             <Typography variant="h5" style={{color: "black"}}>Лукошко</Typography>
         </Grid>
-        {currentUser
+        {/* {currentUser
             ? 
                 <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
                     {currentUser.email}
@@ -55,7 +55,7 @@ const Appbar = (props) => {
                     выход
                 </Button>
             : null
-        }
+        } */}
         </Toolbar>
     </AppBar>
     )

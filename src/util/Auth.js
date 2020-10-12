@@ -1,46 +1,46 @@
-import React, { useEffect, useState } from "react";
-import firebase from "./Firebase";
+// import React, { useEffect, useState } from "react";
+// import firebase from "./Firebase";
 
-export const AuthContext = React.createContext();
+// export const AuthContext = React.createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [pending, setPending] = useState(true);
+// export const AuthProvider = ({ children }) => {
+//   const [currentUser, setCurrentUser] = useState(null);
+//   const [pending, setPending] = useState(true);
 
-  useEffect(() => {
-    firebase.auth().onAuthStateChanged((user) => {
-      setCurrentUser(user)
-      setPending(false)
-      let rootRef = firebase.firestore().collection("users")
-      let userRef = rootRef.doc(user.uid)
-      userRef.get().then(doc => {
-        if (doc && doc.exists) {
-            // pass
-        }
-        else {
-          userRef.set(
-            {
-              name: user.displayName,
-              email: user.email,
-              tagSystems: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)
-            }
-          )
-        }
-      })
-    });
-  }, []);
+//   useEffect(() => {
+//     firebase.auth().onAuthStateChanged((user) => {
+//       setCurrentUser(user)
+//       setPending(false)
+//       let rootRef = firebase.firestore().collection("users")
+//       let userRef = rootRef.doc(user.uid)
+//       userRef.get().then(doc => {
+//         if (doc && doc.exists) {
+//             // pass
+//         }
+//         else {
+//           userRef.set(
+//             {
+//               name: user.displayName,
+//               email: user.email,
+//               tagSystems: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)
+//             }
+//           )
+//         }
+//       })
+//     });
+//   }, []);
 
-  // if(pending){
-  //   return <>Loading...</>
-  // }
+//   // if(pending){
+//   //   return <>Loading...</>
+//   // }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        currentUser
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+//   return (
+//     <AuthContext.Provider
+//       value={{
+//         currentUser
+//       }}
+//     >
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };

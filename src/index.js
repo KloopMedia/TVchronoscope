@@ -6,10 +6,12 @@ import registerServiceWorker from './registerServiceWorker';
 import AppRouter from './AppRouter'
 import { AuthProvider } from "./util/Auth";
 
-ReactDOM.render(
-    <AuthProvider>
+{/* <AuthProvider>
         <AppRouter />
-     </AuthProvider>, 
+</AuthProvider>,  */}
+
+ReactDOM.render(
+    <App />,
      document.getElementById('root'));
 
 registerServiceWorker();
