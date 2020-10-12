@@ -11,8 +11,15 @@ import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
 import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
+
 import Switch from "@material-ui/core/Switch";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
 
@@ -40,31 +47,44 @@ class App extends Component {
     showAdvanced: true,
     mergeData: false,
     message: "",
-    pageSlice: null
+    pageSlice: null,
+    currentSystem: this.context.currentUser.uid,
+    allSystems: [],
+    systemName: "",
+    userEmail: "",
+    currentSystemName: "default"
+  }  
+  
+  componentDidMount() {
+    this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
+      this.setState({allSystems: doc.data().tagSystems})
+    })
   }
 
-  // To do: change currentUser.uid to current system id
-  frameListener = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid).collection("frames")
-  componentDidMount() {
-    this.frameListener.orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
-      if (!this.state.data.isEmpty()) {
-        let data = this.state.data
-        querySnapshot.forEach((doc) => {
-            console.log(doc.data())
-            let key = doc.id.replaceAll("#", "/")
-            if (data.has(key)) {
-              data = data.setIn([key, 'tags'], Set(doc.data().tags))
-              data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-            }
-        });
-        this.setState({data: data})
-        this.allFilter(data.toList(), true)
-      }
-    });
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.currentSystem !== prevState.currentSystem) {
+      console.log("CHANGED")
+      this.frameListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
+        if (!this.state.data.isEmpty()) {
+          let data = this.state.data
+          querySnapshot.forEach((doc) => {
+              console.log(doc.data())
+              let key = doc.id.replaceAll("#", "/")
+              if (data.has(key)) {
+                data = data.setIn([key, 'tags'], Set(doc.data().tags))
+                data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
+              }
+          });
+          this.setState({data: data})
+          this.allFilter(data.toList(), true)
+        }
+      });
+    }
   }
 
   componentWillUnmount() {
     this.frameListener()
+    this.userListener()
   }
 
   excludeTagNegtag = (data) => {
@@ -157,7 +177,7 @@ class App extends Component {
     let docExist = false
     const docKey = row.get("key")
     // To do: change currentUser.uid to current system id
-    let rootRef = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid)
+    let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
     rootRef.get().then(doc => {
       if (doc && doc.exists) {
 
@@ -374,7 +394,7 @@ class App extends Component {
     }
 
     // To do: change currentUser.uid to current system id
-    let frameRef = firebase.firestore().collection("tagSystems").doc(this.context.currentUser.uid).collection("frames")
+    let frameRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
     await frameRef.get().then(snapshot => {
       snapshot.forEach(doc => {
         // console.log(doc.id, " => ", doc.data());
@@ -401,16 +421,65 @@ class App extends Component {
 
   createTagSystem = () => {
     let rootRef = firebase.firestore().collection("tagSystems")
-    rootRef.add(
-      {
-        createdBy: this.context.currentUser.email,
-        admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
+    if (this.state.systemName.length > 0) {
+      rootRef.add(
+        {
+          systemName: this.state.systemName,
+          createdBy: this.context.currentUser.email,
+          admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
+        }
+      ).then(doc => {
+        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
+        console.log("Tag System successfuly created")
+      })
+    }
+    else {
+      alert("System name cannot be empty!")
+    }
+    
+  }
+
+  handleSystemChange = (event) => {
+    firebase.firestore().collection("tagSystems").doc(event.target.value).get().then(doc => {
+      if (doc && doc.exists) {
+        this.setState({currentSystem: event.target.value})
+        this.setState({currentSystemName: doc.data().systemName})
       }
-    ).then(doc => {
-      let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-      userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion(doc.id)})
-      console.log("Tag System successfuly created")
+      else {
+        alert("System doesn't exist")
+      }
     })
+  }
+
+  handleSystemNameChange = (event) => {
+    this.setState({systemName: event.target.value})
+  }
+
+  addUserToSystem = () => {
+    firebase.firestore().collection("users").where("email", "==", this.state.userEmail).get().then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+          if (doc && doc.exists) {
+            if (this.state.currentSystem !== this.context.currentUser.uid) {
+              firebase.firestore().collection("messages").doc(doc.id).collection("invites").add({
+                systemId: this.state.currentSystem,
+                systemName: this.state.currentSystemName,
+                fromUser: this.context.currentUser.email
+              })
+            }
+            else {
+              alert("Default system is private")
+            }
+          }
+          else {
+            alert("User doesn't exist")
+          }
+      });
+  })
+  }
+
+  handleEmailChange = (event) => {
+    this.setState({userEmail: event.target.value})
   }
 
   static contextType = AuthContext
@@ -436,6 +505,19 @@ class App extends Component {
 
     return (
         <div className="App">
+          <FormControl style={{minWidth: 120}}>
+            <InputLabel id="select-system">System</InputLabel>
+            <Select
+              labelId="select-system"
+              id="select-system"
+              value={this.state.currentSystem}
+              onChange={this.handleSystemChange}
+            >
+            {this.state.allSystems.map(system => {
+              return <MenuItem value={system.id}>{system.name}</MenuItem>
+            })}
+            </Select>
+          </FormControl>
           {this.context.currentUser
               ? <Button style={{ position: 'absolute', right: '1%', top: '2%' }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
                 выход
@@ -463,7 +545,18 @@ class App extends Component {
             <p />
             <Grid container>
               <Grid item>
+                <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
+              </Grid>
+              <Grid item>
                 <Button onClick={this.createTagSystem}>Create Tag System</Button>
+              </Grid>
+            </Grid>
+            <Grid>
+            <Grid item>
+                <TextField placeholder="Enter user's email" onChange={this.handleEmailChange} />
+              </Grid>
+              <Grid item>
+                <Button onClick={this.addUserToSystem}>Add user</Button>
               </Grid>
             </Grid>
             <Grid container justify="center" spacing={2}>

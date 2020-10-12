@@ -21,7 +21,8 @@ export const AuthProvider = ({ children }) => {
           userRef.set(
             {
               name: user.displayName,
-              email: user.email
+              email: user.email,
+              tagSystems: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)
             }
           )
         }
