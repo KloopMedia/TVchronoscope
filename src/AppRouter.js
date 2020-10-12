@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import "./App.css"
+import ReactGA from 'react-ga';
 
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Switch,
   Route,
   Link,
@@ -16,12 +17,16 @@ import PrivateRoute from "./util/PrivateRoute";
 
 
 const AppRouter = () => {
-
+    useEffect(() => {
+      ReactGA.initialize('UA-179274271-1');
+      ReactGA.pageview(window.location.pathname + window.location.search);
+    }, [])
     return (
         <Router>
           <Switch>
-              <PrivateRoute exact path={"/"} component={App} />
-              <Route path="/login" component={Login} />
+              {/* <PrivateRoute exact path={"/"} component={App} />
+              <Route path="/login" component={Login} /> */}
+              <Route exact path={"/"} component={App}/>
             </Switch>
         </Router>
   );

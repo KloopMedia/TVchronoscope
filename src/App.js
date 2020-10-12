@@ -48,45 +48,45 @@ class App extends Component {
     showAdvanced: false,
     mergeData: false,
     message: "",
-    pageSlice: null,
-    currentSystem: this.context.currentUser.uid,
-    allSystems: [],
-    systemName: "",
-    userEmail: "",
-    currentSystemName: "default"
+    pageSlice: null
+    // currentSystem: this.context.currentUser.uid,
+    // allSystems: [],
+    // systemName: "",
+    // userEmail: "",
+    // currentSystemName: "default"
   }  
   
-  componentDidMount() {
-    this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
-      this.setState({allSystems: doc.data().tagSystems})
-    })
-  }
+  // componentDidMount() {
+  //   this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
+  //     this.setState({allSystems: doc.data().tagSystems})
+  //   })
+  // }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.currentSystem !== prevState.currentSystem) {
-      console.log("CHANGED")
-      this.frameListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
-        if (!this.state.data.isEmpty()) {
-          let data = this.state.data
-          querySnapshot.forEach((doc) => {
-              console.log(doc.data())
-              let key = doc.id.replaceAll("#", "/")
-              if (data.has(key)) {
-                data = data.setIn([key, 'tags'], Set(doc.data().tags))
-                data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-              }
-          });
-          this.setState({data: data})
-          this.allFilter(data.toList(), true)
-        }
-      });
-    }
-  }
+  // componentDidUpdate(prevProps, prevState) {
+  //   if (this.state.currentSystem !== prevState.currentSystem) {
+  //     console.log("CHANGED")
+  //     this.frameListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
+  //       if (!this.state.data.isEmpty()) {
+  //         let data = this.state.data
+  //         querySnapshot.forEach((doc) => {
+  //             console.log(doc.data())
+  //             let key = doc.id.replaceAll("#", "/")
+  //             if (data.has(key)) {
+  //               data = data.setIn([key, 'tags'], Set(doc.data().tags))
+  //               data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
+  //             }
+  //         });
+  //         this.setState({data: data})
+  //         this.allFilter(data.toList(), true)
+  //       }
+  //     });
+  //   }
+  // }
 
-  componentWillUnmount() {
-    this.frameListener()
-    this.userListener()
-  }
+  // componentWillUnmount() {
+  //   this.frameListener()
+  //   this.userListener()
+  // }
 
   excludeTagNegtag = (data) => {
     let result = data
@@ -230,7 +230,7 @@ class App extends Component {
       row = row.update("negtags", d => d.add(tag))
       row = row.update("tags", d => d.delete(tag))
     }
-    this.updateFirestore(action, row, this.state.tag)
+    // this.updateFirestore(action, row, this.state.tag)
     return row;
   }
 
@@ -394,20 +394,19 @@ class App extends Component {
       data = data.merge(this.state.data);
     }
 
-    // To do: change currentUser.uid to current system id
-    let frameRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
-    await frameRef.get().then(snapshot => {
-      snapshot.forEach(doc => {
-        // console.log(doc.id, " => ", doc.data());
-        let key = doc.id.replaceAll("#", "/")
-        if (data.has(key)) {
-          // console.log("BEFORE", data.get(key).toJS())
-          data = data.setIn([key, 'tags'], Set(doc.data().tags))
-          data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-          // console.log("AFTER", data.get(key).toJS())
-        }
-      })
-    })
+    // let frameRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
+    // await frameRef.get().then(snapshot => {
+    //   snapshot.forEach(doc => {
+    //     // console.log(doc.id, " => ", doc.data());
+    //     let key = doc.id.replaceAll("#", "/")
+    //     if (data.has(key)) {
+    //       // console.log("BEFORE", data.get(key).toJS())
+    //       data = data.setIn([key, 'tags'], Set(doc.data().tags))
+    //       data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
+    //       // console.log("AFTER", data.get(key).toJS())
+    //     }
+    //   })
+    // })
 
     this.setState({data: data})
     this.allFilter(data.toList(), true)
@@ -420,70 +419,70 @@ class App extends Component {
     this.setState({pageSlice: pageSlice})
   }
 
-  createTagSystem = () => {
-    let rootRef = firebase.firestore().collection("tagSystems")
-    if (this.state.systemName.length > 0) {
-      rootRef.add(
-        {
-          systemName: this.state.systemName,
-          createdBy: this.context.currentUser.email,
-          admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
-        }
-      ).then(doc => {
-        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
-        console.log("Tag System successfuly created")
-      })
-    }
-    else {
-      alert("System name cannot be empty!")
-    }
+  // createTagSystem = () => {
+  //   let rootRef = firebase.firestore().collection("tagSystems")
+  //   if (this.state.systemName.length > 0) {
+  //     rootRef.add(
+  //       {
+  //         systemName: this.state.systemName,
+  //         createdBy: this.context.currentUser.email,
+  //         admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
+  //       }
+  //     ).then(doc => {
+  //       let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+  //       userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
+  //       console.log("Tag System successfuly created")
+  //     })
+  //   }
+  //   else {
+  //     alert("System name cannot be empty!")
+  //   }
     
-  }
+  // }
 
-  handleSystemChange = (event) => {
-    firebase.firestore().collection("tagSystems").doc(event.target.value).get().then(doc => {
-      if (doc && doc.exists) {
-        this.setState({currentSystem: event.target.value})
-        this.setState({currentSystemName: doc.data().systemName})
-      }
-      else {
-        alert("System doesn't exist")
-      }
-    })
-  }
+  // handleSystemChange = (event) => {
+  //   firebase.firestore().collection("tagSystems").doc(event.target.value).get().then(doc => {
+  //     if (doc && doc.exists) {
+  //       this.setState({currentSystem: event.target.value})
+  //       this.setState({currentSystemName: doc.data().systemName})
+  //     }
+  //     else {
+  //       alert("System doesn't exist")
+  //     }
+  //   })
+  // }
 
-  handleSystemNameChange = (event) => {
-    this.setState({systemName: event.target.value})
-  }
+  // handleSystemNameChange = (event) => {
+  //   this.setState({systemName: event.target.value})
+  // }
 
-  addUserToSystem = () => {
-    firebase.firestore().collection("users").where("email", "==", this.state.userEmail).get().then(function(querySnapshot) {
-      querySnapshot.forEach(function(doc) {
-          if (doc && doc.exists) {
-            if (this.state.currentSystem !== this.context.currentUser.uid) {
-              firebase.firestore().collection("messages").doc(doc.id).collection("invites").add({
-                systemId: this.state.currentSystem,
-                systemName: this.state.currentSystemName,
-                fromUser: this.context.currentUser.email
-              })
-            }
-            else {
-              alert("Default system is private")
-            }
-          }
-          else {
-            alert("User doesn't exist")
-          }
-      });
-  })
-  }
+  // addUserToSystem = () => {
+  //   firebase.firestore().collection("users").where("email", "==", this.state.userEmail).get().then(function(querySnapshot) {
+  //     querySnapshot.forEach(function(doc) {
+  //         if (doc && doc.exists) {
+  //           if (this.state.currentSystem !== this.context.currentUser.uid) {
+  //             firebase.firestore().collection("messages").doc(doc.id).collection("invites").add({
+  //               systemId: this.state.currentSystem,
+  //               systemName: this.state.currentSystemName,
+  //               fromUser: this.context.currentUser.email
+  //             })
+  //           }
+  //           else {
+  //             alert("Default system is private")
+  //           }
+  //         }
+  //         else {
+  //           alert("User doesn't exist")
+  //         }
+  //     });
+  // })
+  // }
 
-  handleEmailChange = (event) => {
-    this.setState({userEmail: event.target.value})
-  }
+  // handleEmailChange = (event) => {
+  //   this.setState({userEmail: event.target.value})
+  // }
 
-  static contextType = AuthContext
+  // static contextType = AuthContext
 
   render() {
     let charts = null;
@@ -569,7 +568,7 @@ class App extends Component {
                        handleTagTextChange={this.handleTagTextChange}
                        handleTagClick={this.handleTagClick}
                        handleTagModeChange={this.handleTagModeChange}/>
-              <Grid container>
+              {/* <Grid container>
                 <FormControl style={{minWidth: 120}}>
                   <InputLabel id="select-system">System</InputLabel>
                   <Select
@@ -601,7 +600,7 @@ class App extends Component {
                 <Grid item>
                   <Button onClick={this.addUserToSystem}>Add user</Button>
                 </Grid>
-              </Grid>
+              </Grid> */}
               <br />
               <Button onClick={this.handleShowCharts}>Show charts</Button>
               {charts}
