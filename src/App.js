@@ -44,7 +44,7 @@ class App extends Component {
     APIRadius: 0.7,
     spinner: false,
     autoDiscovery: false,
-    showAdvanced: true,
+    showAdvanced: false,
     mergeData: false,
     message: "",
     pageSlice: null,
@@ -505,19 +505,6 @@ class App extends Component {
 
     return (
         <div className="App">
-          <FormControl style={{minWidth: 120}}>
-            <InputLabel id="select-system">System</InputLabel>
-            <Select
-              labelId="select-system"
-              id="select-system"
-              value={this.state.currentSystem}
-              onChange={this.handleSystemChange}
-            >
-            {this.state.allSystems.map(system => {
-              return <MenuItem value={system.id}>{system.name}</MenuItem>
-            })}
-            </Select>
-          </FormControl>
           {this.context.currentUser
               ? <Button style={{ position: 'absolute', right: '1%', top: '2%' }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
                 выход
@@ -543,22 +530,6 @@ class App extends Component {
               }
             </Grid>
             <p />
-            <Grid container>
-              <Grid item>
-                <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
-              </Grid>
-              <Grid item>
-                <Button onClick={this.createTagSystem}>Create Tag System</Button>
-              </Grid>
-            </Grid>
-            <Grid>
-            <Grid item>
-                <TextField placeholder="Enter user's email" onChange={this.handleEmailChange} />
-              </Grid>
-              <Grid item>
-                <Button onClick={this.addUserToSystem}>Add user</Button>
-              </Grid>
-            </Grid>
             <Grid container justify="center" spacing={2}>
               <Grid item>
               <TextField variant="outlined"
@@ -580,18 +551,18 @@ class App extends Component {
                     null
                 }
               </Grid>
-              {/*<Grid item>*/}
-              {/*  <FormControlLabel*/}
-              {/*      control={<Switch checked={this.state.showAdvanced}*/}
-              {/*                       onChange={this.handleShowAdvancedChange}/>}*/}
-              {/*      label="Продвинутые настройки"*/}
-              {/*  />*/}
-              {/*</Grid>*/}
+              {/* <Grid item>
+               <FormControlLabel
+                    control={<Switch checked={this.state.showAdvanced}
+                                     onChange={this.handleShowAdvancedChange}/>}
+                    label="Продвинутые настройки"
+                />
+              </Grid> */}
 
             </Grid>
           </Grid>
           <p />
-          {this.state.showAdvanced &&
+          {/* {this.state.showAdvanced &&
             <div>
               <TagData justify="center"
                        tagModeEnabled={this.state.tagModeEnabled}
@@ -600,10 +571,44 @@ class App extends Component {
                        handleTagTextChange={this.handleTagTextChange}
                        handleTagClick={this.handleTagClick}
                        handleTagModeChange={this.handleTagModeChange}/>
+              <Grid container>
+                <FormControl style={{minWidth: 120}}>
+                  <InputLabel id="select-system">System</InputLabel>
+                  <Select
+                    labelId="select-system"
+                    id="select-system"
+                    value={this.state.currentSystem}
+                    onChange={this.handleSystemChange}
+                  >
+                  {this.state.allSystems.map(system => {
+                    return <MenuItem value={system.id}>{system.name}</MenuItem>
+                  })}
+                  </Select>
+                </FormControl>
+            </Grid>
+              
+              <Grid container>
+                <Grid item>
+                  <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
+                </Grid>
+                <Grid item>
+                  <Button onClick={this.createTagSystem}>Create Tag System</Button>
+                </Grid>
+              </Grid>
+
+              <Grid container>
+                <Grid item>
+                  <TextField placeholder="Enter user's email" onChange={this.handleEmailChange} />
+                </Grid>
+                <Grid item>
+                  <Button onClick={this.addUserToSystem}>Add user</Button>
+                </Grid>
+              </Grid>
+              <br />
               <Button onClick={this.handleShowCharts}>Show charts</Button>
               {charts}
             </div>
-          }
+          } */}
 
           <div justify="center">{this.state.message}</div>
           <p />
