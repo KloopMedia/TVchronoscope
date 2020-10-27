@@ -53,12 +53,28 @@ class App extends Component {
     allSystems: [],
     systemName: "",
     userEmail: "",
-    currentSystemName: "default"
+    currentSystemName: "default",
+    allTags: [],
+    allNegtags: [],
+    filter: "",
+    hideTags: false,
+    hideNegtags: false,
+    filterAll: true
   }  
   
   componentDidMount() {
     this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
       this.setState({allSystems: doc.data().tagSystems})
+    })
+    this.systemListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).onSnapshot(doc => {
+      if (doc.exists) {
+        if (doc.data().tags) {
+          this.setState({allTags: doc.data().tags})
+        }
+        if (doc.data().negtags) {
+          this.setState({allNegtags: doc.data().negtags})
+        }
+      }
     })
   }
 
@@ -86,6 +102,7 @@ class App extends Component {
   componentWillUnmount() {
     this.frameListener()
     this.userListener()
+    this.systemListener()
   }
 
   excludeTagNegtag = (data) => {
@@ -93,10 +110,19 @@ class App extends Component {
     console.log(data)
     if (this.state.tag.length > 0) {
       result = data.filter(d => {
-        const res = !(d.get("tags").includes(this.state.tag) ||
-        d.get("negtags").includes(this.state.tag))
-        console.log(res)
-        return res
+        if (this.state.hideTags && this.state.hideNegtags) {
+          const res = !(d.get("tags").includes(this.state.tag) ||
+          d.get("negtags").includes(this.state.tag))
+          return res
+        }
+        if (this.state.hideTags) {
+          const res = !(d.get("tags").includes(this.state.tag))
+          return res
+        }
+        if (this.state.hideNegtags) {
+          const res = !(d.get("negtags").includes(this.state.tag))
+          return res
+        }
       })
     }
     console.log(result)
@@ -105,18 +131,18 @@ class App extends Component {
 
   allFilter = (data=null, ignoreTag=false) => {
     let filtered = data
-    let tag = this.state.tag
+    let filter = this.state.filter
     if (!filtered) {
       filtered = this.state.data.toList()
     }
-    if (tag.length > 0) {
+    if (filter.length > 0) {
       if (ignoreTag) {
         filtered = filtered.filter(d => d.get("tags"))
       } else {
-        filtered = filtered.filter(d => d.get("tags").includes(tag));
+        filtered = filtered.filter(d => d.get("tags").includes(filter));
       }
     }
-    if (this.state.tagModeEnabled) {
+    if (this.state.hideTags || this.state.hideNegtags) {
       filtered = this.excludeTagNegtag(filtered)
     }
     filtered = filtered.sort((a, b) => {
@@ -207,8 +233,9 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      
-    } else if (action === 'negtag') {
+      rootRef.update({tags: firebase.firestore.FieldValue.arrayUnion(tag)})
+    } 
+    else if (action === 'negtag') {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayRemove(tag),
         negtags: firebase.firestore.FieldValue.arrayUnion(tag),
@@ -221,6 +248,7 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
+      rootRef.update({negtags: firebase.firestore.FieldValue.arrayUnion(tag)})
     }
   }
 
@@ -305,21 +333,32 @@ class App extends Component {
     });
   };
 
-  handleFilterClick = () => {
-    let data = {}
-    firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", this.state.tag).get().then(querySnapshot => {
-      querySnapshot.forEach(doc => {
-        console.log(doc.id, doc.data())
-        let {tags, negtags, date, ...docData} = doc.data()
-        data[doc.data().key] = Map({tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData})
+  handleFilterClick = (tag=null) => {
+    if (this.state.filterAll) {
+      let data = {}
+      let filter = "";
+      if (tag) {
+        filter = tag
+      }
+      else {
+        filter = this.state.filter
+      }
+      console.log(filter)
+      console.log(tag)
+      firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          console.log(doc.id, doc.data())
+          let {tags, negtags, date, ...docData} = doc.data()
+          data[doc.data().key] = Map({tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData})
+        })
+      }).then(() => {
+        console.log(data)
+        data = Map(data)
+        data = data.merge(this.state.data)
+        this.setState({data: data})
+        this.allFilter()
       })
-    }).then(() => {
-      console.log(data)
-      data = Map(data)
-      data = data.merge(this.state.data)
-      this.setState({data: data})
-      this.allFilter()
-    })
+    }
     this.allFilter()
   };
 
@@ -498,6 +537,24 @@ class App extends Component {
     this.setState({userEmail: event.target.value})
   }
 
+  handleFilterChange = (event) => {
+    let tag = event.target.value
+    this.setState({filter: tag})
+    this.handleFilterClick(tag)
+  }
+
+  handleTagsHide = (event) => {
+    this.setState({hideTags: event.target.checked})
+  }
+
+  handleNegtagsHide = (event) => {
+    this.setState({hideNegtags: event.target.checked})
+  }
+
+  handleFilterAllChange = (event) => {
+    this.setState({filterAll: event.target.checked})
+  }
+
   static contextType = AuthContext
 
   render() {
@@ -580,7 +637,16 @@ class App extends Component {
               <TagData justify="center"
                        tagModeEnabled={this.state.tagModeEnabled}
                        tag={this.state.tag}
+                       filterTag={this.state.filter}
+                       allTags={this.state.allTags}
+                       hideTags={this.state.hideTags}
+                       hideNegtags={this.state.hideNegtags}
+                       filterAll={this.state.filterAll}
+                       handleFilterAllChange={this.handleFilterAllChange}
+                       handleTagsHide={this.handleTagsHide}
+                       handleNegtagsHide={this.handleNegtagsHide}
                        filter={this.handleFilterClick}
+                       handleFilterChange={this.handleFilterChange}
                        handleTagTextChange={this.handleTagTextChange}
                        handleTagClick={this.handleTagClick}
                        handleTagModeChange={this.handleTagModeChange}/>
