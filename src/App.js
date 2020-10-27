@@ -177,7 +177,7 @@ class App extends Component {
   updateFirestore = async (action, row, tag) => {
     let docExist = false
     const docKey = row.get("key")
-    // To do: change currentUser.uid to current system id
+    const {tags, negtags, ...body} = row.toJS()
     let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
     rootRef.get().then(doc => {
       if (doc && doc.exists) {
@@ -198,7 +198,8 @@ class App extends Component {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayUnion(tag),
         negtags: firebase.firestore.FieldValue.arrayRemove(tag),
-        modified: firebase.firestore.FieldValue.serverTimestamp()
+        modified: firebase.firestore.FieldValue.serverTimestamp(),
+        ...body
       }
       if (docExist) {
         frameRef.update(docData)
@@ -211,7 +212,8 @@ class App extends Component {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayRemove(tag),
         negtags: firebase.firestore.FieldValue.arrayUnion(tag),
-        modified: firebase.firestore.FieldValue.serverTimestamp()
+        modified: firebase.firestore.FieldValue.serverTimestamp(),
+        ...body
       }
       if (docExist) {
         frameRef.update(docData)
@@ -304,7 +306,21 @@ class App extends Component {
   };
 
   handleFilterClick = () => {
-    this.allFilter();
+    let data = {}
+    firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", this.state.tag).get().then(querySnapshot => {
+      querySnapshot.forEach(doc => {
+        console.log(doc.id, doc.data())
+        let {tags, negtags, date, ...docData} = doc.data()
+        data[doc.data().key] = Map({tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData})
+      })
+    }).then(() => {
+      console.log(data)
+      data = Map(data)
+      data = data.merge(this.state.data)
+      this.setState({data: data})
+      this.allFilter()
+    })
+    this.allFilter()
   };
 
   handleTagClick = (action) => {
@@ -394,7 +410,6 @@ class App extends Component {
       data = data.merge(this.state.data);
     }
 
-    // To do: change currentUser.uid to current system id
     let frameRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
     await frameRef.get().then(snapshot => {
       snapshot.forEach(doc => {
