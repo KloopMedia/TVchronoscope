@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../util/Auth';
-import firebase from '../../util/Firebase'
+import firebase, {signInWithGoogle} from '../../util/Firebase'
 
 import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid'
@@ -54,7 +54,7 @@ const Appbar = (props) => {
                 <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
                     выход
                 </Button>
-            : null
+            : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
         }
         </Toolbar>
     </AppBar>

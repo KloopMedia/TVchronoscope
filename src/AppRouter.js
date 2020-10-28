@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import "./App.css"
 
 import {
@@ -11,19 +11,24 @@ import {
 } from "react-router-dom";
 
 import App from "./App";
+import PublicApp from './PublicApp'
 import Login from "./Components/Auth/Login";
 import PrivateRoute from "./util/PrivateRoute";
-
+import { AuthContext } from './util/Auth';
 
 const AppRouter = () => {
-
-    return (
-        <Router>
-          <Switch>
-              <PrivateRoute exact path={"/"} component={App} />
-              <Route path="/login" component={Login} />
-            </Switch>
-        </Router>
+  const { currentUser } = useContext(AuthContext);
+  return (
+      <Router>
+        <Switch>
+          {
+            currentUser 
+            ? <Route exact path={"/"} component={App} />
+            : <Route exact path={"/"} component={PublicApp} />
+          }
+          <Route path="/login" component={Login} />
+        </Switch>
+      </Router>
   );
 }
 

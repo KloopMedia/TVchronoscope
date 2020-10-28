@@ -5,23 +5,11 @@ import { Button, Grid, TextField, CircularProgress, Typography } from '@material
 import { List, Set, Map } from 'immutable';
 import loadImage from 'blueimp-load-image';
 
-
-import TagData from './Components/TagData/TagData';
 import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
 import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
 import Appbar from "./Components/Appbar/Appbar"
-
-import Switch from "@material-ui/core/Switch";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-
-import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
 
 class App extends Component {
@@ -48,107 +36,38 @@ class App extends Component {
     showAdvanced: false,
     mergeData: false,
     message: "",
-    pageSlice: null,
-    currentSystem: this.context.currentUser.uid,
-    allSystems: [],
-    systemName: "",
-    userEmail: "",
-    currentSystemName: "default",
-    allTags: [],
-    allNegtags: [],
-    filter: "",
-    hideTags: false,
-    hideNegtags: false,
-    filterAll: true
+    pageSlice: null
   }  
-  
-  componentDidMount() {
-    this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
-      this.setState({allSystems: doc.data().tagSystems})
-    })
-    this.systemListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).onSnapshot(doc => {
-      if (doc.exists) {
-        if (doc.data().tags) {
-          this.setState({allTags: doc.data().tags})
-        }
-        if (doc.data().negtags) {
-          this.setState({allNegtags: doc.data().negtags})
-        }
-      }
-    })
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.currentSystem !== prevState.currentSystem) {
-      console.log("CHANGED")
-      this.frameListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").orderBy("modified", "desc").limit(1).onSnapshot((querySnapshot) => {
-        if (!this.state.data.isEmpty()) {
-          let data = this.state.data
-          querySnapshot.forEach((doc) => {
-              console.log(doc.data())
-              let key = doc.id.replaceAll("#", "/")
-              if (data.has(key)) {
-                data = data.setIn([key, 'tags'], Set(doc.data().tags))
-                data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-              }
-          });
-          this.setState({data: data})
-          this.allFilter(data.toList(), true)
-        }
-      });
-    }
-  }
-
-  componentWillUnmount() {
-    // this.frameListener()
-    this.userListener()
-    this.systemListener()
-  }
 
   excludeTagNegtag = (data) => {
     let result = data
     console.log(data)
     if (this.state.tag.length > 0) {
       result = data.filter(d => {
-        if (this.state.hideTags && this.state.hideNegtags) {
-          const res = !(d.get("tags").includes(this.state.tag) ||
-          d.get("negtags").includes(this.state.tag))
-          return res
-        }
-        if (this.state.hideTags) {
-          const res = !(d.get("tags").includes(this.state.tag))
-          return res
-        }
-        if (this.state.hideNegtags) {
-          const res = !(d.get("negtags").includes(this.state.tag))
-          return res
-        }
+        const res = !(d.get("tags").includes(this.state.tag) ||
+        d.get("negtags").includes(this.state.tag))
+        console.log(res)
+        return res
       })
     }
     console.log(result)
     return result
   }
 
-  allFilter = (data=null, ignoreTag=false, tag=null) => {
+  allFilter = (data=null, ignoreTag=false) => {
     let filtered = data
-    let filter = ""
-    if (tag) {
-      filter = tag
-    }
-    else {
-      filter = this.state.filter
-    }
+    let tag = this.state.tag
     if (!filtered) {
       filtered = this.state.data.toList()
     }
-    if (filter.length > 0) {
+    if (tag.length > 0) {
       if (ignoreTag) {
         filtered = filtered.filter(d => d.get("tags"))
       } else {
-        filtered = filtered.filter(d => d.get("tags").includes(filter));
+        filtered = filtered.filter(d => d.get("tags").includes(tag));
       }
     }
-    if (this.state.hideTags || this.state.hideNegtags) {
+    if (this.state.tagModeEnabled) {
       filtered = this.excludeTagNegtag(filtered)
     }
     filtered = filtered.sort((a, b) => {
@@ -209,7 +128,7 @@ class App extends Component {
   updateFirestore = async (action, row, tag) => {
     let docExist = false
     const docKey = row.get("key")
-    const {tags, negtags, ...body} = row.toJS()
+    // To do: change currentUser.uid to current system id
     let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
     rootRef.get().then(doc => {
       if (doc && doc.exists) {
@@ -230,8 +149,7 @@ class App extends Component {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayUnion(tag),
         negtags: firebase.firestore.FieldValue.arrayRemove(tag),
-        modified: firebase.firestore.FieldValue.serverTimestamp(),
-        ...body
+        modified: firebase.firestore.FieldValue.serverTimestamp()
       }
       if (docExist) {
         frameRef.update(docData)
@@ -239,14 +157,12 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({tags: firebase.firestore.FieldValue.arrayUnion(tag)})
-    } 
-    else if (action === 'negtag') {
+      
+    } else if (action === 'negtag') {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayRemove(tag),
         negtags: firebase.firestore.FieldValue.arrayUnion(tag),
-        modified: firebase.firestore.FieldValue.serverTimestamp(),
-        ...body
+        modified: firebase.firestore.FieldValue.serverTimestamp()
       }
       if (docExist) {
         frameRef.update(docData)
@@ -254,7 +170,6 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({negtags: firebase.firestore.FieldValue.arrayUnion(tag)})
     }
   }
 
@@ -266,7 +181,7 @@ class App extends Component {
       row = row.update("negtags", d => d.add(tag))
       row = row.update("tags", d => d.delete(tag))
     }
-    this.updateFirestore(action, row, this.state.tag)
+    // this.updateFirestore(action, row, this.state.tag)
     return row;
   }
 
@@ -339,35 +254,8 @@ class App extends Component {
     });
   };
 
-  handleFilterClick = (tag=null) => {
-    if (this.state.filterAll) {
-      let data = {}
-      let filter = "";
-      if (tag) {
-        filter = tag
-      }
-      else {
-        filter = this.state.filter
-      }
-      console.log(filter)
-      console.log(tag)
-      firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          console.log(doc.id, doc.data())
-          let {tags, negtags, date, ...docData} = doc.data()
-          data[doc.data().key] = Map({tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData})
-        })
-      }).then(() => {
-        console.log(data)
-        data = Map(data)
-        data = data.merge(this.state.data)
-        this.setState({data: data})
-        this.allFilter()
-      })
-    }
-    else {
-      this.allFilter(null,false,tag)
-    }
+  handleFilterClick = () => {
+    this.allFilter();
   };
 
   handleTagClick = (action) => {
@@ -457,20 +345,6 @@ class App extends Component {
       data = data.merge(this.state.data);
     }
 
-    let frameRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
-    await frameRef.get().then(snapshot => {
-      snapshot.forEach(doc => {
-        // console.log(doc.id, " => ", doc.data());
-        let key = doc.id.replaceAll("#", "/")
-        if (data.has(key)) {
-          // console.log("BEFORE", data.get(key).toJS())
-          data = data.setIn([key, 'tags'], Set(doc.data().tags))
-          data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-          // console.log("AFTER", data.get(key).toJS())
-        }
-      })
-    })
-
     this.setState({data: data})
     this.allFilter(data.toList(), true)
     this.setState({spinner: false})
@@ -482,88 +356,6 @@ class App extends Component {
     this.setState({pageSlice: pageSlice})
   }
 
-  createTagSystem = () => {
-    let rootRef = firebase.firestore().collection("tagSystems")
-    if (this.state.systemName.length > 0) {
-      rootRef.add(
-        {
-          systemName: this.state.systemName,
-          createdBy: this.context.currentUser.email,
-          admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
-        }
-      ).then(doc => {
-        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
-        console.log("Tag System successfuly created")
-      })
-    }
-    else {
-      alert("System name cannot be empty!")
-    }
-    
-  }
-
-  handleSystemChange = (event) => {
-    firebase.firestore().collection("tagSystems").doc(event.target.value).get().then(doc => {
-      if (doc && doc.exists) {
-        this.setState({currentSystem: event.target.value})
-        this.setState({currentSystemName: doc.data().systemName})
-      }
-      else {
-        alert("System doesn't exist")
-      }
-    })
-  }
-
-  handleSystemNameChange = (event) => {
-    this.setState({systemName: event.target.value})
-  }
-
-  addUserToSystem = () => {
-    firebase.firestore().collection("users").where("email", "==", this.state.userEmail).get().then(function(querySnapshot) {
-      querySnapshot.forEach(function(doc) {
-          if (doc && doc.exists) {
-            if (this.state.currentSystem !== this.context.currentUser.uid) {
-              firebase.firestore().collection("messages").doc(doc.id).collection("invites").add({
-                systemId: this.state.currentSystem,
-                systemName: this.state.currentSystemName,
-                fromUser: this.context.currentUser.email
-              })
-            }
-            else {
-              alert("Default system is private")
-            }
-          }
-          else {
-            alert("User doesn't exist")
-          }
-      });
-  })
-  }
-
-  handleEmailChange = (event) => {
-    this.setState({userEmail: event.target.value})
-  }
-
-  handleFilterChange = (event) => {
-    let tag = event.target.value
-    this.setState({filter: tag})
-    this.handleFilterClick(tag)
-  }
-
-  handleTagsHide = (event) => {
-    this.setState({hideTags: event.target.checked})
-  }
-
-  handleNegtagsHide = (event) => {
-    this.setState({hideNegtags: event.target.checked})
-  }
-
-  handleFilterAllChange = (event) => {
-    this.setState({filterAll: event.target.checked})
-  }
-
-  static contextType = AuthContext
 
   render() {
     let charts = null;
@@ -629,73 +421,9 @@ class App extends Component {
                     null
                 }
               </Grid>
-              <Grid item>
-               <FormControlLabel
-                    control={<Switch checked={this.state.showAdvanced}
-                                     onChange={this.handleShowAdvancedChange}/>}
-                    label="Продвинутые настройки"
-                />
-              </Grid>
-
             </Grid>
           </Grid>
           <p />
-          {this.state.showAdvanced &&
-            <div>
-              <TagData justify="center"
-                       tagModeEnabled={this.state.tagModeEnabled}
-                       tag={this.state.tag}
-                       filterTag={this.state.filter}
-                       allTags={this.state.allTags}
-                       hideTags={this.state.hideTags}
-                       hideNegtags={this.state.hideNegtags}
-                       filterAll={this.state.filterAll}
-                       handleFilterAllChange={this.handleFilterAllChange}
-                       handleTagsHide={this.handleTagsHide}
-                       handleNegtagsHide={this.handleNegtagsHide}
-                       filter={this.handleFilterClick}
-                       handleFilterChange={this.handleFilterChange}
-                       handleTagTextChange={this.handleTagTextChange}
-                       handleTagClick={this.handleTagClick}
-                       handleTagModeChange={this.handleTagModeChange}/>
-              <Grid container>
-                <FormControl style={{minWidth: 120}}>
-                  <InputLabel id="select-system">System</InputLabel>
-                  <Select
-                    labelId="select-system"
-                    id="select-system"
-                    value={this.state.currentSystem}
-                    onChange={this.handleSystemChange}
-                  >
-                  {this.state.allSystems.map(system => {
-                    return <MenuItem value={system.id}>{system.name}</MenuItem>
-                  })}
-                  </Select>
-                </FormControl>
-            </Grid>
-              
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={this.createTagSystem}>Create Tag System</Button>
-                </Grid>
-              </Grid>
-
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter user's email" onChange={this.handleEmailChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={this.addUserToSystem}>Add user</Button>
-                </Grid>
-              </Grid>
-              <br />
-              <Button onClick={this.handleShowCharts}>Show charts</Button>
-              {charts}
-            </div>
-          }
 
           <div justify="center">{this.state.message}</div>
           <p />
