@@ -23,6 +23,7 @@ import Select from '@material-ui/core/Select';
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
+import { map } from 'mathjs';
 
 class App extends Component {
 
@@ -49,10 +50,11 @@ class App extends Component {
     mergeData: false,
     message: "",
     pageSlice: null,
-    currentSystem: this.context.currentUser.uid,
+    currentSystem: null,
     allSystems: [],
     systemName: "",
-    userEmail: "",
+    addSystemId: "",
+    addUserId: "",
     currentSystemName: "default",
     allTags: [],
     allNegtags: [],
@@ -63,18 +65,14 @@ class App extends Component {
   }  
   
   componentDidMount() {
+
     this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
       this.setState({allSystems: doc.data().tagSystems})
-    })
-    this.systemListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).onSnapshot(doc => {
-      if (doc.exists) {
-        if (doc.data().tags) {
-          this.setState({allTags: doc.data().tags})
+      doc.data().tagSystems.forEach(system => {
+        if (system.name === this.state.currentSystemName) {
+          this.setState({currentSystem: system.id})
         }
-        if (doc.data().negtags) {
-          this.setState({allNegtags: doc.data().negtags})
-        }
-      }
+      })
     })
   }
 
@@ -96,18 +94,34 @@ class App extends Component {
           this.allFilter(data.toList(), true)
         }
       });
+      console.log("CURRENT SYSTEM", this.state.currentSystem)
+      this.systemListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).onSnapshot(doc => {
+        if (doc.exists) {
+          if (doc.data().tags) {
+            this.setState({allTags: doc.data().tags})
+          }
+          else {
+            this.setState({allTags: []})
+          }
+          // if (doc.data().negtags) {
+          //   this.setState({allNegtags: doc.data().negtags})
+          // }
+          // else {
+          //   this.setState({allTags: []})
+          // }
+        }
+      })
     }
   }
 
   componentWillUnmount() {
-    // this.frameListener()
+    this.frameListener()
     this.userListener()
     this.systemListener()
   }
 
   excludeTagNegtag = (data) => {
     let result = data
-    console.log(data)
     if (this.state.tag.length > 0) {
       result = data.filter(d => {
         if (this.state.hideTags && this.state.hideNegtags) {
@@ -125,7 +139,6 @@ class App extends Component {
         }
       })
     }
-    console.log(result)
     return result
   }
 
@@ -485,17 +498,22 @@ class App extends Component {
   createTagSystem = () => {
     let rootRef = firebase.firestore().collection("tagSystems")
     if (this.state.systemName.length > 0) {
-      rootRef.add(
-        {
-          systemName: this.state.systemName,
-          createdBy: this.context.currentUser.email,
-          admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid),
-        }
-      ).then(doc => {
-        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
-        console.log("Tag System successfuly created")
-      })
+      if (this.state.systemName !== 'default') {
+        rootRef.add(
+          {
+            systemName: this.state.systemName,
+            createdBy: this.context.currentUser.email
+          }
+        ).then(doc => {
+          let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+          userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
+          rootRef.doc(doc.id).collection("systemAdmins").doc(this.context.currentUser.uid).set({})
+          console.log("Tag System successfuly created")
+        })
+      }
+      else {
+        alert("System name cannot be 'default'!")
+      }
     }
     else {
       alert("System name cannot be empty!")
@@ -508,6 +526,8 @@ class App extends Component {
       if (doc && doc.exists) {
         this.setState({currentSystem: event.target.value})
         this.setState({currentSystemName: doc.data().systemName})
+        this.setState({data: Map()})
+        this.allFilter()
       }
       else {
         alert("System doesn't exist")
@@ -520,29 +540,39 @@ class App extends Component {
   }
 
   addUserToSystem = () => {
-    firebase.firestore().collection("users").where("email", "==", this.state.userEmail).get().then(function(querySnapshot) {
-      querySnapshot.forEach(function(doc) {
-          if (doc && doc.exists) {
-            if (this.state.currentSystem !== this.context.currentUser.uid) {
-              firebase.firestore().collection("messages").doc(doc.id).collection("invites").add({
-                systemId: this.state.currentSystem,
-                systemName: this.state.currentSystemName,
-                fromUser: this.context.currentUser.email
-              })
-            }
-            else {
-              alert("Default system is private")
-            }
-          }
-          else {
-            alert("User doesn't exist")
-          }
-      });
-  })
+    if (this.state.currentSystem) {
+      if (this.state.currentSystemName !== 'default') {
+        let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
+        let adminsRef = rootRef.collection("systemAdmins").doc(this.state.addUserId)
+        adminsRef.set({}).then(() => {
+          alert("Пользователь успешно добавлен")
+        })
+      }
+      else {
+        alert("Error: default system is private")
+      }
+    }
   }
 
-  handleEmailChange = (event) => {
-    this.setState({userEmail: event.target.value})
+  addSystem = () => {
+    let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.addSystemId)
+    rootRef.get().then(doc => {
+      if (doc && doc.exists) {
+        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: doc.data().systemName})})
+      }
+      else {
+        alert("Система не существует")
+      }
+    })
+  }
+
+  handleAddSystemChange = (event) => {
+    this.setState({addSystemId: event.target.value})
+  }
+
+  handleAddUserIdChange = (event) => {
+    this.setState({addUserId: event.target.value})
   }
 
   handleFilterChange = (event) => {
@@ -667,13 +697,15 @@ class App extends Component {
                     value={this.state.currentSystem}
                     onChange={this.handleSystemChange}
                   >
-                  {this.state.allSystems.map(system => {
-                    return <MenuItem value={system.id}>{system.name}</MenuItem>
+                  {this.state.allSystems.map((system, i) => {
+                    return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
                   })}
                   </Select>
                 </FormControl>
-            </Grid>
-              
+              </Grid>
+              <Grid container>
+                <Typography>System ID: {this.state.currentSystem}</Typography>
+              </Grid>
               <Grid container>
                 <Grid item>
                   <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
@@ -685,10 +717,18 @@ class App extends Component {
 
               <Grid container>
                 <Grid item>
-                  <TextField placeholder="Enter user's email" onChange={this.handleEmailChange} />
+                  <TextField placeholder="Enter user's ID" onChange={this.handleAddUserIdChange} />
                 </Grid>
                 <Grid item>
                   <Button onClick={this.addUserToSystem}>Add user</Button>
+                </Grid>
+              </Grid>
+              <Grid container>
+                <Grid item>
+                  <TextField placeholder="Enter systems's ID" onChange={this.handleAddSystemChange} />
+                </Grid>
+                <Grid item>
+                  <Button onClick={this.addSystem}>Add system</Button>
                 </Grid>
               </Grid>
               <br />

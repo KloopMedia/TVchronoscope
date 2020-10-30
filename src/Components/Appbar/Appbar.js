@@ -45,6 +45,13 @@ const Appbar = (props) => {
         {currentUser
             ? 
                 <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
+                    {currentUser.uid}
+                </Typography>
+            : null
+        }
+        {currentUser
+            ? 
+                <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
                     {currentUser.email}
                 </Typography>
             : null

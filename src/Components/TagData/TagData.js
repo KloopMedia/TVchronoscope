@@ -27,7 +27,7 @@ const tagData = (props) => {
     const classes = useStyles();
     return (
         <div>
-            <Grid container justifyContent="center" spacing={2}>
+            <Grid container justify="center" spacing={2}>
                 <Grid item>
                     <TextField
                         id="tag_field"
@@ -51,7 +51,7 @@ const tagData = (props) => {
                     onChange={props.handleFilterChange}
                     >
                     <MenuItem value="">Все</MenuItem>
-                    {props.allTags.map(tag => <MenuItem value={tag}>{tag}</MenuItem>)}
+                    {props.allTags.map((tag,i) => <MenuItem key={i} value={tag}>{tag}</MenuItem>)}
                     </Select>
                 </FormControl>
                 <Grid item>
@@ -72,7 +72,7 @@ const tagData = (props) => {
                 </Grid>
 
             </Grid>
-            <Grid container justifyContent="center" spacing={2}>
+            <Grid container justify="center" spacing={2}>
                 {/* <Grid item> <FormControlLabel
                     control={<Switch checked={props.tagModeEnabled}
                                      onChange={props.handleTagModeChange}/>}

@@ -12,21 +12,31 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user)
       setPending(false)
       let rootRef = firebase.firestore().collection("users")
-      let userRef = rootRef.doc(user.uid)
-      userRef.get().then(doc => {
-        if (doc && doc.exists) {
-            // pass
-        }
-        else {
-          userRef.set(
-            {
-              name: user.displayName,
-              email: user.email,
-              tagSystems: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)
-            }
-          )
-        }
-      })
+      let systemRef = firebase.firestore().collection("tagSystems")
+      if (user) {
+        let userRef = rootRef.doc(user.uid)
+        userRef.get().then(doc => {
+          if (doc && doc.exists) {
+              // pass
+          }
+          else {
+            console.log("Creating user")
+            systemRef.add({
+              systemName: "default",
+              createdBy: user.email
+            }).then((doc) => {
+              userRef.set(
+                {
+                  name: user.displayName,
+                  email: user.email,
+                  tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: "default"})
+                }
+              )
+              systemRef.doc(doc.id).collection("systemAdmins").doc(user.uid).set({})
+            })
+          }
+        })
+      }
     });
   }, []);
 
