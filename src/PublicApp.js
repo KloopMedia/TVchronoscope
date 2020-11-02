@@ -9,7 +9,7 @@ import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
 import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
-import Appbar from "./Components/Appbar/Appbar"
+import Appbar from "./Components/Appbar/PublicAppbar"
 import firebase from './util/Firebase'
 
 class App extends Component {

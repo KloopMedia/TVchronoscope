@@ -23,7 +23,7 @@ import Select from '@material-ui/core/Select';
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
-import { map } from 'mathjs';
+
 
 class App extends Component {
 
@@ -346,9 +346,9 @@ class App extends Component {
     });
   };
 
-  handleTagTextChange = (event) => {
+  handleTagTextChange = (value) => {
     this.setState({
-      tag: event.target.value
+      tag: value
     });
   };
 
@@ -392,7 +392,7 @@ class App extends Component {
   };
 
   handleSearchClick = (index) => {
-    const url = this.state.filteredData.get(index).get('url')
+    const url = this.state.pageSlice.get(index).get('url')
     this.setState({initialImage: url})
     this.handlePostData(url);
   };
@@ -615,8 +615,17 @@ class App extends Component {
     }
 
     return (
+      <Appbar
+        showAdvanced={this.state.showAdvanced}
+        system={this.state.currentSystem}
+        allSystems={this.state.allSystems}
+        changeShowAdvanced={this.handleShowAdvancedChange}
+        systemChange={this.handleSystemChange}
+        createSystem={this.createTagSystem}
+        addSystem={this.addSystem}
+        addUser={this.addUserToSystem}
+      >
         <div className="App">
-          <Appbar />
           <Typography style={{padding: 5}}>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
           <Grid container
                 direction="column"
@@ -748,6 +757,7 @@ class App extends Component {
           returnPageSlice={this.returnPageSlice}
           />
         </div>
+        </Appbar>
     );
   }
 }

@@ -10,6 +10,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -29,11 +30,23 @@ const tagData = (props) => {
         <div>
             <Grid container justify="center" spacing={2}>
                 <Grid item>
-                    <TextField
+                    {/* <TextField
                         id="tag_field"
                         label="Tag"
                         onChange={props.handleTagTextChange}
-                        value={props.tag}/>
+                        value={props.tag}/> */}
+                        <Autocomplete
+                            id="combo-box-demo"
+                            freeSolo
+                            options={props.allTags}
+                            getOptionLabel={(tag) => tag}
+                            style={{ width: 150 }}
+                            value={props.tag}
+                            onInputChange={(event, newInputValue) => {
+                                props.handleTagTextChange(newInputValue);
+                            }}
+                            renderInput={(params) => <TextField {...params} label="Tag" />}
+                        />
                 </Grid>
                 {/* <Grid item>
                     <Button
