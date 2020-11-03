@@ -269,6 +269,28 @@ class App extends Component {
       }
       rootRef.update({negtags: firebase.firestore.FieldValue.arrayUnion(tag)})
     }
+    else if (action === 'untag') {
+      const docData = {
+        tags: firebase.firestore.FieldValue.arrayRemove(tag),
+        negtags: firebase.firestore.FieldValue.arrayRemove(tag),
+        modified: firebase.firestore.FieldValue.serverTimestamp(),
+        ...body
+      }
+      if (docExist) {
+        frameRef.update(docData)
+      }
+    }
+    else if (action === 'clear') {
+      const docData = {
+        tags: [],
+        negtags: [],
+        modified: firebase.firestore.FieldValue.serverTimestamp(),
+        ...body
+      }
+      if (docExist) {
+        frameRef.set(docData)
+      }
+    }
   }
 
   getUpdatedTags = (action, row, tag) => {
@@ -278,6 +300,12 @@ class App extends Component {
     } else if (action === 'negtag') {
       row = row.update("negtags", d => d.add(tag))
       row = row.update("tags", d => d.delete(tag))
+    } else if (action === 'untag') {
+      row = row.update("tags", d => d.delete(tag))
+      row = row.update("negtags", d => d.delete(tag))
+    } else if (action === 'clear') {
+      row = row.update("tags", d => d.clear())
+      row = row.update("negtags", d => d.clear())
     }
     this.updateFirestore(action, row, this.state.tag)
     return row;

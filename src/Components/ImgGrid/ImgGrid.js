@@ -109,6 +109,16 @@ const ImgGrid = props => {
                                     onClick={() => props.tagClick('negtag', i)}>
                                 NEGTAG
                             </Button>
+                            <Button size="medium"
+                                    color="primary"
+                                    onClick={() => props.tagClick('untag', i)}>
+                                UNTAG
+                            </Button>
+                            <Button size="medium"
+                                    color="primary"
+                                    onClick={() => props.tagClick('clear', i)}>
+                                CLEAR
+                            </Button>
                         </span>
                                 }
                                 {img_data.get('facesInFrame') === 1 &&
