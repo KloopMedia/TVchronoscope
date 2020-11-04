@@ -112,6 +112,9 @@ class App extends Component {
         }
       })
     }
+    if (this.state.hideTags !== prevState.hideTags || this.state.hideNegtags !== prevState.hideNegtags) {
+      this.allFilter()
+    }
   }
 
   componentWillUnmount() {
