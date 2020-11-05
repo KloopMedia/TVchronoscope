@@ -5,6 +5,8 @@ import {
 } from "@material-ui/core";
 import { List } from "immutable"
 import React, { useState, useEffect } from "react";
+import ImageViewer from './ImageViewer'
+
 
 const rowsPP = 10;
 
@@ -17,6 +19,9 @@ const ImgGrid = props => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(rowsPP);
     const [dataSlice, setDataSlice] = useState(List([]));
+    const [open, setOpen] = useState(false)
+    const [image, setImage] = useState(null)
+    const [title, setTitle] = useState(null)
 
     const calculateSlice = (pageNumber, rowsPage, data) => {
         const numberOfPages = Math.floor(data.size / rowsPage) + 1;
@@ -63,6 +68,19 @@ const ImgGrid = props => {
         />
     )
 
+    const handleOpen = (img_data) => {
+        const img = img_data.get('url')
+        const distance = img_data.get('distance').toFixed(2)
+        setOpen(true)
+        setImage(img)
+        setTitle("Distance " + distance)
+        console.log(img)
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+      };
+
     // const sliceIndices = calculateSlice(page, props.data.size, rowsPerPage)
     // setDataSlice(props.data.slice(sliceIndices.start, sliceIndices.end))
 
@@ -73,7 +91,7 @@ const ImgGrid = props => {
                 {dataSlice.map((img_data, i) => (
                     <Grid item key={img_data.get('key')}>
                         <Card style={{width: 400}}>
-                            <CardActionArea>
+                            <CardActionArea onClick={() => handleOpen(img_data)}>
                                 <CardMedia
                                     style={{height: 300}}
                                     image={img_data.get('url')}
@@ -135,6 +153,7 @@ const ImgGrid = props => {
                 ))}
             </Grid>
             {pagination}
+            <ImageViewer open={open} handleClose={handleClose} image={image} title={title} />
         </div>
     )
 }
