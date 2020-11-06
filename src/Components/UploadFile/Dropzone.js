@@ -1,21 +1,26 @@
 import React, {useCallback} from 'react'
 import {useDropzone} from 'react-dropzone'
+import Typography from '@material-ui/core/Typography'
+import Button from '@material-ui/core/Button'
 
 const style = {
 	flex: 1,
 	display: 'flex',
+	justifyContent: 'center',
 	flexDirection: 'column',
+	height: '300px',
 	alignItems: 'center',
 	paddingTop: '30px',
 	paddingBottom: '30px',
 	paddingLeft: 'auto',
 	paddingRight: 'auto',
-	borderWidth: 2,
-	borderRadius: 2,
-	borderColor: '#eeeeee',
-	borderStyle: 'dashed',
-	backgroundColor: '#fafafa',
-	color: '#bdbdbd',
+	// borderWidth: 3,
+	// borderRadius: 2,
+	// borderColor: '#000000',
+	// borderStyle: 'dashed',
+	background: "repeating-linear-gradient(45deg, rgba(189, 189, 189, 0.3), rgba(189, 189, 189, 0.3) 10px, rgba(255, 255, 255, 0.3) 10px, rgba(255, 255, 255, 0.3) 25px)",
+	opacity: 'rgba(76, 175, 80, 0.1)',
+	color: 'black',
 	outline: 'none',
 	transition: 'border .24s ease-in-out',
   };
@@ -55,13 +60,13 @@ const Dropzone = (props) => {
 	// console.log(files)
   
 	return (
-	<section className="container" style={{width: '100%'}}>
+	<section className="container" style={{width: 300 }}>
 	  <div {...getRootProps({style})}>
 		<input {...getInputProps()} />
-		<p>Перетащите фото с одним лицом сюда или нажмите для выбора файла.</p>
-		<button type="button" onClick={open}>
+		<Typography variant="h6">Перетащите фото с одним лицом сюда или нажмите для выбора файла.</Typography>
+		<Button variant="outlined" style={{background: 'white', borderWidth: 2, borderColor: 'black'}} onClick={open}>
           Выбрать файл
-        </button>
+        </Button>
 	  </div>
 	</section>
 	)

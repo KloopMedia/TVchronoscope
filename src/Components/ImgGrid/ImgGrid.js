@@ -79,7 +79,7 @@ const ImgGrid = props => {
 
     const handleClose = () => {
         setOpen(false);
-      };
+    };
 
     // const sliceIndices = calculateSlice(page, props.data.size, rowsPerPage)
     // setDataSlice(props.data.slice(sliceIndices.start, sliceIndices.end))

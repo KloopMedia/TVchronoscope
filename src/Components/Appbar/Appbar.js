@@ -2,34 +2,30 @@ import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../util/Auth';
 import firebase, {signInWithGoogle} from '../../util/Firebase'
 import clsx from 'clsx';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { makeStyles, useTheme, withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import LoopIcon from '@material-ui/icons/Loop';
-import ClearIcon from '@material-ui/icons/Clear';
-import SearchIcon from '@material-ui/icons/Search';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import Tooltip from '@material-ui/core/Tooltip'
 import { Typography } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid'
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
+import MuiMenuItem from '@material-ui/core/MenuItem';
+import AddIcon from '@material-ui/icons/Add';
+import Dialog from '../SystemDialog/Dialog'
+import Menu from '@material-ui/core/Menu';
+import Avatar from '@material-ui/core/Avatar';
 
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -88,14 +84,27 @@ const useStyles = makeStyles((theme) => ({
             duration: theme.transitions.duration.enteringScreen,
         }),
         marginLeft: 0,
-    }
+    },
+    small: {
+        width: theme.spacing(4),
+        height: theme.spacing(4),
+    },
 }));
+
+const MenuItem = withStyles({
+    root: {
+      justifyContent: "flex-end"
+    }
+  })(MuiMenuItem);
 
 export default function PersistentDrawerLeft(props) {
     const { currentUser } = useContext(AuthContext);
     const classes = useStyles();
     const theme = useTheme();
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const menuOpen = Boolean(anchorEl);
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -104,6 +113,23 @@ export default function PersistentDrawerLeft(props) {
     const handleDrawerClose = () => {
         setOpen(false);
     };
+
+    const handleDialogOpen = () => {
+        setDialogOpen(true)
+    }
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    };
+
+    const handleMenu = (event) => {
+        setAnchorEl(event.currentTarget);
+      };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null)
+        console.log(currentUser)
+    }
 
     //   const copyToClipboard = (text) => {
     //     let data = JSON.stringify(text)
@@ -114,6 +140,21 @@ export default function PersistentDrawerLeft(props) {
     return (
         <div className={classes.root}>
             <CssBaseline />
+            <Dialog 
+                open={dialogOpen} 
+                handleClose={handleDialogClose} 
+                showAdvanced={props.showAdvanced}
+                currentSystem={props.currentSystem}
+                allSystems={props.allSystems}
+                handleShowAdvancedChange={props.handleShowAdvancedChange}
+                handleSystemChange={props.handleSystemChange}
+                handleSystemNameChange={props.handleSystemNameChange}
+                handleAddSystemChange={props.handleAddSystemChange}
+                handleAddUserIdChange={props.handleAddUserIdChange}
+                createTagSystem={props.createTagSystem}
+                addSystem={props.addSystem}
+                addUserToSystem={props.addUserToSystem}
+            />
             <AppBar
                 position="fixed"
                 className={clsx(classes.appBar, {
@@ -134,7 +175,7 @@ export default function PersistentDrawerLeft(props) {
                         {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
                         <Typography variant="h5" style={{ color: "black" }}>Лукошко</Typography>
                     </Grid>
-                    {currentUser
+                    {/* {currentUser
                         ?
                         <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
                             {currentUser.uid}
@@ -147,14 +188,60 @@ export default function PersistentDrawerLeft(props) {
                             {currentUser.email}
                         </Typography>
                         : null
+                    } */}
+                    {currentUser
+                        ?
+                        <IconButton aria-label="add" size="small" onClick={handleDialogOpen} style={{marginRight: 10}}>
+                            <AddIcon fontSize="large" style={{ color: 'black' }} />
+                        </IconButton>
+                        : null
                     }
                     {currentUser
+                        ?
+                        <div>
+                            <IconButton
+                                aria-label="account of current user"
+                                aria-controls="menu-appbar"
+                                aria-haspopup="true"
+                                onClick={handleMenu}
+                                color="inherit"
+                                size="small"
+                            >
+                                <Avatar src={currentUser.photoURL} className={classes.small} />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                                }}
+                                open={menuOpen}
+                                onClose={handleMenuClose}
+                            >
+                                <Grid container direction="column" alignItems="center" style={{padding: 10}}>
+                                    <Avatar src={currentUser.photoURL} style={{marginBottom: 8}} />
+                                    <Typography variant="body2">{currentUser.displayName}</Typography>
+                                    <Typography variant="body2">{currentUser.email}</Typography>
+                                    <Typography variant="body2">ID: <Typography component="span" variant="subtitle2">{currentUser.uid}</Typography></Typography>
+                                </Grid>
+                                <MenuItem onClick={() => firebase.auth().signOut()}>Выход</MenuItem>
+                            </Menu>
+                        </div>
+                        : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
+                    }
+                    {/* {currentUser
                         ?
                         <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
                             выход
                     </Button>
                         : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
-                    }
+                    } */}
                 </Toolbar>
             </AppBar>
             <Drawer
@@ -172,14 +259,14 @@ export default function PersistentDrawerLeft(props) {
                     </IconButton>
                 </div>
                 <Divider />
-                {/* <Grid container>
+                <Grid container>
                 <FormControl style={{minWidth: 120}}>
                   <InputLabel id="select-system">System</InputLabel>
                   <Select
                     labelId="select-system"
                     id="select-system"
-                    value={props.system}
-                    onChange={props.changeSystem}
+                    value={props.currentSystem}
+                    onChange={props.handleSystemChange}
                   >
                   {props.allSystems.map((system, i) => {
                     return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
@@ -214,7 +301,7 @@ export default function PersistentDrawerLeft(props) {
                 <Grid item>
                   <Button onClick={props.addSystem}>Add system</Button>
                 </Grid>
-              </Grid> */}
+              </Grid>
             </Drawer>
             <main style={{ padding: 0, height: '100%', background: 'transparent' }}
                 className={clsx(classes.content, {

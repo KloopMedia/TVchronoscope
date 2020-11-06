@@ -595,7 +595,7 @@ class App extends Component {
       else {
         alert("Система не существует")
       }
-    })
+    }).catch(error => alert(error))
   }
 
   handleAddSystemChange = (event) => {
@@ -648,13 +648,16 @@ class App extends Component {
     return (
       <Appbar
         showAdvanced={this.state.showAdvanced}
-        system={this.state.currentSystem}
+        currentSystem={this.state.currentSystem}
         allSystems={this.state.allSystems}
-        changeShowAdvanced={this.handleShowAdvancedChange}
-        systemChange={this.handleSystemChange}
-        createSystem={this.createTagSystem}
+        handleShowAdvancedChange={this.handleShowAdvancedChange}
+        handleSystemChange={this.handleSystemChange}
+        handleSystemNameChange={this.handleSystemNameChange}
+        handleAddSystemChange={this.handleAddSystemChange}
+        handleAddUserIdChange={this.handleAddUserIdChange}
+        createTagSystem={this.createTagSystem}
         addSystem={this.addSystem}
-        addUser={this.addUserToSystem}
+        addUserToSystem={this.addUserToSystem}
       >
         <div className="App">
           <Typography style={{padding: 5}}>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
@@ -662,18 +665,24 @@ class App extends Component {
                 direction="column"
                 alignItems="center"
                 justify="center">
-            <Grid container justify="center">
+            <Grid container justify="center" style={{
+              borderWidth: 3,
+              borderRadius: 2,
+              borderColor: '#000000',
+              borderStyle: 'dashed',
+              width: "auto",
+              
+              }}
+            >
               <Dropzone handleChange={this.handleFileChange}
                         handleClick={this.handleSnackbarClick}
                         setImage={this.setInitial}/>
-            </Grid>
-            <Grid container justify="center">
               {this.state.initialImage ?
-                  <img src={this.state.initialImage}
-                       alt="initial_image"
-                       style={{height: 300}}/>
-                  :
-                  null
+                <img src={this.state.initialImage}
+                      alt="initial_image"
+                      style={{height: 300}}/>
+                :
+                  <Grid style={{width: 300, borderLeft: '3px dashed black',}}></Grid>
               }
             </Grid>
             <p />
@@ -728,7 +737,7 @@ class App extends Component {
                        handleTagTextChange={this.handleTagTextChange}
                        handleTagClick={this.handleTagClick}
                        handleTagModeChange={this.handleTagModeChange}/>
-              <Grid container>
+              {/* <Grid container>
                 <FormControl style={{minWidth: 120}}>
                   <InputLabel id="select-system">System</InputLabel>
                   <Select
@@ -770,7 +779,7 @@ class App extends Component {
                 <Grid item>
                   <Button onClick={this.addSystem}>Add system</Button>
                 </Grid>
-              </Grid>
+              </Grid> */}
               <br />
               <Button onClick={this.handleShowCharts}>Show charts</Button>
               {charts}
