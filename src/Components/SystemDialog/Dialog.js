@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { withStyles, makeStyles  } from '@material-ui/core/styles';
+import { withStyles, makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import MuiDialogTitle from '@material-ui/core/DialogTitle';
@@ -19,16 +19,16 @@ import Divider from '@material-ui/core/Divider'
 
 const useStyles = makeStyles((theme) => ({
   textfield: {
-    paddingLeft: 5, 
+    paddingLeft: 5,
     paddingRight: 5,
     paddingTop: 2,
-    border: '2px solid black', 
+    border: '2px solid black',
     borderRadius: 5
   },
   button: {
-    color: "white", 
-    background: 'black', 
-    marginTop: 7, 
+    color: "white",
+    background: 'black',
+    marginTop: 7,
     marginBottom: 10
   }
 }));
@@ -79,73 +79,79 @@ export default function CustomizedDialogs(props) {
   return (
     <div>
       <Dialog onClose={props.handleClose} aria-labelledby="customized-dialog-title" open={props.open} fullWidth={true} maxWidth={"md"} >
-          <DialogTitle id="customized-dialog-title" onClose={props.handleClose}>
-          {props.title}
-          </DialogTitle>
-          <DialogContent>
-              <Box display="flex" justifyItems="center">
-                <Grid container direction="column" alignItems="center">
-                    <AddIcon fontSize="large" />
-                    <Typography variant="h6">Создать систему</Typography>
-                    <br/>
-                    <TextField  
-                      size="small" 
-                      placeholder="Введите имя системы" 
-                      onChange={props.handleSystemNameChange}
-                      className={classes.textfield}
-                      InputProps={{
-                        disableUnderline: true
-                      }}
-                      />
-                    <Button variant="contained" className={classes.button} onClick={props.createTagSystem}>Создать</Button>
-                </Grid>
-                <Divider variant="middle" orientation="vertical" flexItem />
-                <Grid container direction="column" alignItems="center">
-                    <PostAddIcon fontSize="large" />
-                    <Typography variant="h6">Добавить систему</Typography>
-                    <br/>
-                    <TextField  
-                      size="small" 
-                      placeholder="Введите id системы" 
-                      onChange={props.handleAddSystemChange}
-                      className={classes.textfield}
-                      InputProps={{
-                        disableUnderline: true
-                      }}
-                      />
-                    <Button 
-                      variant="contained" 
-                      className={classes.button}
-                      onClick={props.addSystem}
-                      >
-                      Добавить
+        <DialogTitle id="customized-dialog-title" onClose={props.handleClose}>
+          <Box display="flex">
+            <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID системы: <Typography component="span" variant="subtitle2">{props.currentSystem}</Typography></Typography>
+            <Divider orientation="vertical" flexItem style={{ marginRight: 5, marginLeft: 5}} />
+            <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID пользователя: <Typography component="span" variant="subtitle2">{props.userId}</Typography></Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box display="flex" justifyItems="center">
+            <Grid container direction="column" alignItems="center">
+              <AddIcon fontSize="large" />
+              <Typography variant="h6">Создать систему</Typography>
+              <br />
+              <TextField
+                size="small"
+                placeholder="Введите имя системы"
+                onChange={props.handleSystemNameChange}
+                className={classes.textfield}
+                InputProps={{
+                  disableUnderline: true
+                }}
+              />
+              <Button variant="contained" className={classes.button} onClick={props.createTagSystem}>Создать</Button>
+            </Grid>
+            <Divider variant="middle" orientation="vertical" flexItem />
+            <Grid container direction="column" alignItems="center">
+              <PostAddIcon fontSize="large" />
+              <Typography variant="h6">Добавить систему</Typography>
+              <br />
+              <TextField
+                size="small"
+                placeholder="Введите id системы"
+                onChange={props.handleAddSystemChange}
+                className={classes.textfield}
+                InputProps={{
+                  disableUnderline: true
+                }}
+              />
+              <Button
+                variant="contained"
+                className={classes.button}
+                onClick={props.addSystem}
+              >
+                Добавить
                     </Button>
-                </Grid>
-                <Divider variant="middle" orientation="vertical" flexItem />
-                <Grid container direction="column" alignItems="center">
-                    <PersonAddIcon fontSize="large" />
-                    <Typography variant="h6">Добавить пользователя</Typography>
-                    <br/>
-                    <TextField  
-                      size="small" 
-                      placeholder="Введите id пользователя" 
-                      onChange={props.handleAddUserIdChange}
-                      className={classes.textfield}
-                      InputProps={{
-                        disableUnderline: true
-                      }}
-                      />
-                    <Button 
-                      variant="contained" 
-                      className={classes.button}
-                      onClick={props.addUserToSystem}
-                      >
-                      Добавить
+            </Grid>
+            <Divider variant="middle" orientation="vertical" flexItem />
+            <Grid container direction="column" alignItems="center">
+              <PersonAddIcon fontSize="large" />
+              <Typography variant="h6">Добавить пользователя</Typography>
+              <br />
+              <TextField
+                size="small"
+                placeholder="Введите id пользователя"
+                onChange={props.handleAddUserIdChange}
+                className={classes.textfield}
+                InputProps={{
+                  disableUnderline: true
+                }}
+              />
+              <Button
+                variant="contained"
+                className={classes.button}
+                onClick={props.addUserToSystem}
+              >
+                Добавить
                     </Button>
-                </Grid>
-              </Box>
-          </DialogContent>
-          <DialogActions></DialogActions>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+
+        </DialogActions>
       </Dialog>
     </div>
   );

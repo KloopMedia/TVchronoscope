@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import { extent, nest, timeFormat, sum, timeDays, range } from 'd3';
-import { Button, Grid, TextField, CircularProgress, Typography } from '@material-ui/core';
+import { Button, Grid, TextField, CircularProgress, Typography, IconButton, Tooltip } from '@material-ui/core';
 import { List, Set, Map } from 'immutable';
 import loadImage from 'blueimp-load-image';
 
@@ -20,6 +20,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import SearchIcon from '@material-ui/icons/Search';
+import FilterListIcon from '@material-ui/icons/FilterList';
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
@@ -32,8 +34,8 @@ class App extends Component {
     filteredData: List([]),
     timeFilteredData: List([]),
     tag: "",
-    nestedData: [{values: []}],
-    nestedPercentData: [{values: []}],
+    nestedData: [{ values: [] }],
+    nestedPercentData: [{ values: [] }],
     nestedAllTags: [],
     nestedAllTagsDates: {},
     timeRange: [],
@@ -46,7 +48,7 @@ class App extends Component {
     APIRadius: 0.7,
     spinner: false,
     autoDiscovery: false,
-    showAdvanced: false,
+    showAdvanced: true,
     mergeData: false,
     message: "",
     pageSlice: null,
@@ -62,15 +64,15 @@ class App extends Component {
     hideTags: false,
     hideNegtags: false,
     filterAll: true
-  }  
-  
+  }
+
   componentDidMount() {
 
     this.userListener = firebase.firestore().collection("users").doc(this.context.currentUser.uid).onSnapshot(doc => {
-      this.setState({allSystems: doc.data().tagSystems})
+      this.setState({ allSystems: doc.data().tagSystems })
       doc.data().tagSystems.forEach(system => {
         if (system.name === this.state.currentSystemName) {
-          this.setState({currentSystem: system.id})
+          this.setState({ currentSystem: system.id })
         }
       })
     })
@@ -83,14 +85,14 @@ class App extends Component {
         if (!this.state.data.isEmpty()) {
           let data = this.state.data
           querySnapshot.forEach((doc) => {
-              console.log(doc.data())
-              let key = doc.id.replaceAll("#", "/")
-              if (data.has(key)) {
-                data = data.setIn([key, 'tags'], Set(doc.data().tags))
-                data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
-              }
+            console.log(doc.data())
+            let key = doc.id.replaceAll("#", "/")
+            if (data.has(key)) {
+              data = data.setIn([key, 'tags'], Set(doc.data().tags))
+              data = data.setIn([key, 'negtags'], Set(doc.data().negtags))
+            }
           });
-          this.setState({data: data})
+          this.setState({ data: data })
           this.allFilter(data.toList(), true)
         }
       });
@@ -98,10 +100,10 @@ class App extends Component {
       this.systemListener = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).onSnapshot(doc => {
         if (doc.exists) {
           if (doc.data().tags) {
-            this.setState({allTags: doc.data().tags})
+            this.setState({ allTags: doc.data().tags })
           }
           else {
-            this.setState({allTags: []})
+            this.setState({ allTags: [] })
           }
           // if (doc.data().negtags) {
           //   this.setState({allNegtags: doc.data().negtags})
@@ -129,7 +131,7 @@ class App extends Component {
       result = data.filter(d => {
         if (this.state.hideTags && this.state.hideNegtags) {
           const res = !(d.get("tags").includes(this.state.tag) ||
-          d.get("negtags").includes(this.state.tag))
+            d.get("negtags").includes(this.state.tag))
           return res
         }
         if (this.state.hideTags) {
@@ -145,7 +147,7 @@ class App extends Component {
     return result
   }
 
-  allFilter = (data=null, ignoreTag=false, tag=null) => {
+  allFilter = (data = null, ignoreTag = false, tag = null) => {
     let filtered = data
     let filter = ""
     if (tag) {
@@ -187,11 +189,11 @@ class App extends Component {
       let data = this.state.data;
       this.state.pageSlice.forEach((row, i) => {
         let d = this.getUpdatedTags(action,
-            row,
-            this.state.tag)
+          row,
+          this.state.tag)
         data = data.set(d.get("key"), d)
       })
-      this.setState({data: data})
+      this.setState({ data: data })
       this.allFilter(data.toList(), true)
     } else {
       alert('Fill TAG field')
@@ -202,8 +204,8 @@ class App extends Component {
     if (this.state.tag !== "") {
       let data = this.state.data;
       const row = this.getUpdatedTags(action,
-          this.state.pageSlice.get(index),
-          this.state.tag)
+        this.state.pageSlice.get(index),
+        this.state.tag)
       data = data.set(row.get("key"), row)
 
       this.setState({
@@ -225,14 +227,14 @@ class App extends Component {
   updateFirestore = async (action, row, tag) => {
     let docExist = false
     const docKey = row.get("key")
-    const {tags, negtags, ...body} = row.toJS()
+    const { tags, negtags, ...body } = row.toJS()
     let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
     rootRef.get().then(doc => {
       if (doc && doc.exists) {
 
       }
       else {
-        rootRef.set({admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid)})
+        rootRef.set({ admins: firebase.firestore.FieldValue.arrayUnion(this.context.currentUser.uid) })
       }
     })
     let frameRef = rootRef.collection("frames").doc(docKey.replaceAll("/", "#"))
@@ -255,8 +257,8 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({tags: firebase.firestore.FieldValue.arrayUnion(tag)})
-    } 
+      rootRef.update({ tags: firebase.firestore.FieldValue.arrayUnion(tag) })
+    }
     else if (action === 'negtag') {
       const docData = {
         tags: firebase.firestore.FieldValue.arrayRemove(tag),
@@ -270,7 +272,7 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({negtags: firebase.firestore.FieldValue.arrayUnion(tag)})
+      rootRef.update({ negtags: firebase.firestore.FieldValue.arrayUnion(tag) })
     }
     else if (action === 'untag') {
       const docData = {
@@ -318,7 +320,7 @@ class App extends Component {
     let startTime = this.timeScale.invert(interval[0])
     let endTime = this.timeScale.invert(interval[1])
     return data.filter(d => (d.date.getTime() >= startTime &&
-                             d.date.getTime() <= endTime))
+      d.date.getTime() <= endTime))
   };
 
   nestData = () => {
@@ -337,23 +339,26 @@ class App extends Component {
     let dataExtent = extent(data, d => day(d.date));
     let timeRange = range(dataExtent[0], dataExtent[1]);
     let nestedAllTagsDates = nest().key(d => day(d.date))
-                       .rollup(values => sum(values, d => +1))
-                       .map(flatData);
+      .rollup(values => sum(values, d => +1))
+      .map(flatData);
     let nestedAllTags = timeRange.map(d => nestedAllTagsDates.get(d) || 0)
     let nested = nest().key(d => d.tags)
-                       .key(d => day(d.date))
-                       .rollup(values => sum(values, d => +1))
-                       .map(flatData);
+      .key(d => day(d.date))
+      .rollup(values => sum(values, d => +1))
+      .map(flatData);
 
     //let timeRange = timeDays(dataExtent[0], dataExtent[1]).map(d => day(d));
     let zeroPadded = nested.keys()
-                           .map(d => {
-                             return {key: d,
-                                     values: timeRange.map(t => nested.get(d).get(t) || 0)}})
+      .map(d => {
+        return {
+          key: d,
+          values: timeRange.map(t => nested.get(d).get(t) || 0)
+        }
+      })
     let zeroPaddedPercent = zeroPadded.map((d) => {
       return {
         key: d.key,
-        values: d.values.map((t, i) => t/nestedAllTags[i]*100)
+        values: d.values.map((t, i) => t / nestedAllTags[i] * 100)
       }
     });
 
@@ -383,7 +388,7 @@ class App extends Component {
     });
   };
 
-  handleFilterClick = (tag=null) => {
+  handleFilterClick = (tag = null) => {
     if (this.state.filterAll) {
       let data = {}
       let filter = "";
@@ -398,19 +403,19 @@ class App extends Component {
       firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
         querySnapshot.forEach(doc => {
           console.log(doc.id, doc.data())
-          let {tags, negtags, date, ...docData} = doc.data()
-          data[doc.data().key] = Map({tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData})
+          let { tags, negtags, date, ...docData } = doc.data()
+          data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
         })
       }).then(() => {
         console.log(data)
         data = Map(data)
         data = data.merge(this.state.data)
-        this.setState({data: data})
+        this.setState({ data: data })
         this.allFilter()
       })
     }
     else {
-      this.allFilter(null,false,tag)
+      this.allFilter(null, false, tag)
     }
   };
 
@@ -424,7 +429,7 @@ class App extends Component {
 
   handleSearchClick = (index) => {
     const url = this.state.pageSlice.get(index).get('url')
-    this.setState({initialImage: url})
+    this.setState({ initialImage: url })
     this.handlePostData(url);
   };
 
@@ -454,37 +459,38 @@ class App extends Component {
     });
   };
 
-  handleShowCharts = () => {
-    const charts = this.state.showCharts
-    console.log(charts)
-    this.setState({showCharts: !charts})
+  handleShowCharts = (event) => {
+    // const charts = this.state.showCharts
+    // console.log(charts)
+    // this.setState({ showCharts: !charts })
+    this.setState({ showCharts: event.target.checked })
   }
 
   // Photo methods start
 
   handleFileChange = (file) => {
     console.log(file)
-    this.setState({file: file})
+    this.setState({ file: file })
   }
 
   handleSnackbarClick = () => {
-    this.setState({snackbarOpen: true})
+    this.setState({ snackbarOpen: true })
   };
 
   setInitial = (initialImage) => {
-    this.setState({initialImage: initialImage})
+    this.setState({ initialImage: initialImage })
   };
 
   handleAPIRadiusChange = (event) => {
-    this.setState({APIRadius: event.target.value})
+    this.setState({ APIRadius: event.target.value })
   };
 
-  handlePostData = async (url=null) => {
-    if ((!this.state.file) && url===null) {
+  handlePostData = async (url = null) => {
+    if ((!this.state.file) && url === null) {
       alert("No file to upload")
       return 0
     }
-    this.setState({spinner: true})
+    this.setState({ spinner: true })
     console.log("Sending data")
     let data
     if (this.isInternalLink(url)) {
@@ -493,9 +499,9 @@ class App extends Component {
       data = await getImgsFromImg(this.state.APIRadius, null, [url])
     }
     if (data.size === 0) {
-      this.setState({message: "Ничего не найдено. Попробуйте уменьшить схожесть лица."})
+      this.setState({ message: "Ничего не найдено. Попробуйте уменьшить схожесть лица." })
     } else {
-      this.setState({message: ""})
+      this.setState({ message: "" })
     }
     if (this.state.mergeData) {
       data = data.merge(this.state.data);
@@ -515,15 +521,15 @@ class App extends Component {
       })
     })
 
-    this.setState({data: data})
+    this.setState({ data: data })
     this.allFilter(data.toList(), true)
-    this.setState({spinner: false})
+    this.setState({ spinner: false })
   }
 
   // Photo methods end
 
   returnPageSlice = (pageSlice) => {
-    this.setState({pageSlice: pageSlice})
+    this.setState({ pageSlice: pageSlice })
   }
 
   createTagSystem = () => {
@@ -537,7 +543,7 @@ class App extends Component {
           }
         ).then(doc => {
           let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-          userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: this.state.systemName})})
+          userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: this.state.systemName }) })
           rootRef.doc(doc.id).collection("systemAdmins").doc(this.context.currentUser.uid).set({})
           console.log("Tag System successfuly created")
         })
@@ -549,15 +555,15 @@ class App extends Component {
     else {
       alert("System name cannot be empty!")
     }
-    
+
   }
 
   handleSystemChange = (event) => {
     firebase.firestore().collection("tagSystems").doc(event.target.value).get().then(doc => {
       if (doc && doc.exists) {
-        this.setState({currentSystem: event.target.value})
-        this.setState({currentSystemName: doc.data().systemName})
-        this.setState({data: Map()})
+        this.setState({ currentSystem: event.target.value })
+        this.setState({ currentSystemName: doc.data().systemName })
+        this.setState({ data: Map() })
         this.allFilter()
       }
       else {
@@ -567,7 +573,7 @@ class App extends Component {
   }
 
   handleSystemNameChange = (event) => {
-    this.setState({systemName: event.target.value})
+    this.setState({ systemName: event.target.value })
   }
 
   addUserToSystem = () => {
@@ -590,7 +596,7 @@ class App extends Component {
     rootRef.get().then(doc => {
       if (doc && doc.exists) {
         let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-        userRef.update({tagSystems: firebase.firestore.FieldValue.arrayUnion({id: doc.id, name: doc.data().systemName})})
+        userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: doc.data().systemName }) })
       }
       else {
         alert("Система не существует")
@@ -599,29 +605,29 @@ class App extends Component {
   }
 
   handleAddSystemChange = (event) => {
-    this.setState({addSystemId: event.target.value})
+    this.setState({ addSystemId: event.target.value })
   }
 
   handleAddUserIdChange = (event) => {
-    this.setState({addUserId: event.target.value})
+    this.setState({ addUserId: event.target.value })
   }
 
   handleFilterChange = (event) => {
     let tag = event.target.value
-    this.setState({filter: tag})
+    this.setState({ filter: tag })
     this.handleFilterClick(tag)
   }
 
   handleTagsHide = (event) => {
-    this.setState({hideTags: event.target.checked})
+    this.setState({ hideTags: event.target.checked })
   }
 
   handleNegtagsHide = (event) => {
-    this.setState({hideNegtags: event.target.checked})
+    this.setState({ hideNegtags: event.target.checked })
   }
 
   handleFilterAllChange = (event) => {
-    this.setState({filterAll: event.target.checked})
+    this.setState({ filterAll: event.target.checked })
   }
 
   static contextType = AuthContext
@@ -660,144 +666,123 @@ class App extends Component {
         addUserToSystem={this.addUserToSystem}
       >
         <div className="App">
-          <Typography style={{padding: 5}}>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
+        <Grid container justify="center" style={{padding: 40}}>
+          <Typography>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
+          <br />
+          <Typography>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
+        </Grid>
           <Grid container
-                direction="column"
-                alignItems="center"
-                justify="center">
+            direction="column"
+            alignItems="center"
+            justify="center">
             <Grid container justify="center" style={{
               borderWidth: 3,
               borderRadius: 2,
               borderColor: '#000000',
               borderStyle: 'dashed',
               width: "auto",
-              
-              }}
+
+            }}
             >
               <Dropzone handleChange={this.handleFileChange}
-                        handleClick={this.handleSnackbarClick}
-                        setImage={this.setInitial}/>
+                handleClick={this.handleSnackbarClick}
+                setImage={this.setInitial} />
               {this.state.initialImage ?
                 <img src={this.state.initialImage}
-                      alt="initial_image"
-                      style={{height: 300}}/>
+                  alt="initial_image"
+                  style={{ height: 300 }} />
                 :
-                  <Grid style={{width: 300, borderLeft: '3px dashed black',}}></Grid>
+                <Grid style={{ width: 300, borderLeft: '3px dashed black', }}></Grid>
               }
             </Grid>
-            <p />
-            <Typography style={{padding: 15}}>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
-            <Grid container justify="center" spacing={2}>
-              <Grid item>
-              <TextField variant="outlined"
-                         id="radius"
-                         size="small"
-                         label="Схожесть лица"
-                         value={this.state.APIRadius}
-                         onChange={this.handleAPIRadiusChange}/>
+            <br />
+            
+            <Grid container justify="center" alignItems="center">
+              <Grid item style={{ padding: 8 }}>
+                <TextField variant="outlined"
+                  id="radius"
+                  size="small"
+                  label="Схожесть лица"
+                  value={this.state.APIRadius}
+                  onChange={this.handleAPIRadiusChange} />
               </Grid>
               <Grid item>
-              <Button variant="contained"
-                      size="small"
-                      onClick={() => this.handlePostData(this.state.initialImage)}>Найти похожие лица</Button>
+                <Tooltip title="Найти похожие лица" placement="top">
+                  <Button variant="contained" style={{ background: 'green' }}
+                    // size="small"
+                    onClick={() => this.handlePostData(this.state.initialImage)}>
+                    <SearchIcon style={{ fill: "white" }} />
+                  </Button>
+                </Tooltip>
               </Grid>
-              <Grid item>
+              <Grid item style={{ padding: 8 }}>
                 {this.state.spinner ?
-                    <CircularProgress size={32} style={{color: 'grey'}}/>
-                    :
-                    null
+                  <CircularProgress size={32} style={{ color: 'grey' }} />
+                  :
+                  null
                 }
               </Grid>
-              <Grid item>
-               <FormControlLabel
-                    control={<Switch checked={this.state.showAdvanced}
-                                     onChange={this.handleShowAdvancedChange}/>}
-                    label="Продвинутые настройки"
+              {/* <Grid item>
+                <FormControlLabel
+                  control={<Switch checked={this.state.showAdvanced}
+                    onChange={this.handleShowAdvancedChange} />}
+                  label="Продвинутые настройки"
                 />
-              </Grid>
+              </Grid> */}
 
             </Grid>
+            <Grid>
+            <FormControl style={{ width: 275, margin: 8 }}>
+                <InputLabel id="filter-label">Фильтр</InputLabel>
+                <Select
+                  IconComponent={FilterListIcon}
+                  labelId="filter-label"
+                  id="filter"
+                  value={this.state.filter}
+                  onChange={this.handleFilterChange}
+                >
+                  <MenuItem value="">Все</MenuItem>
+                  {this.state.allTags.map((tag, i) => <MenuItem key={i} value={tag}>{tag}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
-          <p />
           {this.state.showAdvanced &&
-            <div>
-              <TagData justify="center"
-                       tagModeEnabled={this.state.tagModeEnabled}
-                       tag={this.state.tag}
-                       filterTag={this.state.filter}
-                       allTags={this.state.allTags}
-                       hideTags={this.state.hideTags}
-                       hideNegtags={this.state.hideNegtags}
-                       filterAll={this.state.filterAll}
-                       handleFilterAllChange={this.handleFilterAllChange}
-                       handleTagsHide={this.handleTagsHide}
-                       handleNegtagsHide={this.handleNegtagsHide}
-                       filter={this.handleFilterClick}
-                       handleFilterChange={this.handleFilterChange}
-                       handleTagTextChange={this.handleTagTextChange}
-                       handleTagClick={this.handleTagClick}
-                       handleTagModeChange={this.handleTagModeChange}/>
-              {/* <Grid container>
-                <FormControl style={{minWidth: 120}}>
-                  <InputLabel id="select-system">System</InputLabel>
-                  <Select
-                    labelId="select-system"
-                    id="select-system"
-                    value={this.state.currentSystem}
-                    onChange={this.handleSystemChange}
-                  >
-                  {this.state.allSystems.map((system, i) => {
-                    return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
-                  })}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid container>
-                <Typography>System ID: {this.state.currentSystem}</Typography>
-              </Grid>
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter system's name" onChange={this.handleSystemNameChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={this.createTagSystem}>Create Tag System</Button>
-                </Grid>
-              </Grid>
-
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter user's ID" onChange={this.handleAddUserIdChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={this.addUserToSystem}>Add user</Button>
-                </Grid>
-              </Grid>
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter systems's ID" onChange={this.handleAddSystemChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={this.addSystem}>Add system</Button>
-                </Grid>
-              </Grid> */}
-              <br />
-              <Button onClick={this.handleShowCharts}>Show charts</Button>
+            <Grid style={{paddingTop: 20, paddingBottom: 10}}>
+              <TagData
+                tagModeEnabled={this.state.tagModeEnabled}
+                tag={this.state.tag}
+                filterTag={this.state.filter}
+                allTags={this.state.allTags}
+                hideTags={this.state.hideTags}
+                hideNegtags={this.state.hideNegtags}
+                filterAll={this.state.filterAll}
+                showCharts={this.state.showCharts}
+                handleFilterAllChange={this.handleFilterAllChange}
+                handleTagsHide={this.handleTagsHide}
+                handleNegtagsHide={this.handleNegtagsHide}
+                filter={this.handleFilterClick}
+                handleFilterChange={this.handleFilterChange}
+                handleTagTextChange={this.handleTagTextChange}
+                handleTagClick={this.handleTagClick}
+                handleTagModeChange={this.handleTagModeChange}
+                handleShowCharts={this.handleShowCharts} />
+              {/* <Button onClick={this.handleShowCharts}>Show charts</Button> */}
               {charts}
-            </div>
+            </Grid>
           }
 
-          <div justify="center">{this.state.message}</div>
-          <p />
+          <Grid container justify="center">{this.state.message}</Grid>
           <ImgGrid data={this.state.filteredData}
-                   search={this.handleSearchClick}
-                   tagClick={this.handleRowRemoval}
-          showAdvanced={this.state.showAdvanced}
-          returnRowsPerPage={this.returnRowsPerPage}
-          returnCurrentPage={this.returnCurrentPage}
-          returnPageSlice={this.returnPageSlice}
+            search={this.handleSearchClick}
+            tagClick={this.handleRowRemoval}
+            showAdvanced={this.state.showAdvanced}
+            returnRowsPerPage={this.returnRowsPerPage}
+            returnCurrentPage={this.returnCurrentPage}
+            returnPageSlice={this.returnPageSlice}
           />
         </div>
-        </Appbar>
+      </Appbar>
     );
   }
 }

@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../util/Auth';
-import firebase, {signInWithGoogle} from '../../util/Firebase'
+import firebase, { signInWithGoogle } from '../../util/Firebase'
 import clsx from 'clsx';
 import { makeStyles, useTheme, withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -25,7 +25,7 @@ import Dialog from '../SystemDialog/Dialog'
 import Menu from '@material-ui/core/Menu';
 import Avatar from '@material-ui/core/Avatar';
 
-const drawerWidth = 300;
+const drawerWidth = 220;
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -89,13 +89,17 @@ const useStyles = makeStyles((theme) => ({
         width: theme.spacing(4),
         height: theme.spacing(4),
     },
+    formControl: {
+        margin: theme.spacing(1),
+        minWidth: 120,
+    }
 }));
 
 const MenuItem = withStyles({
     root: {
-      justifyContent: "flex-end"
+        justifyContent: "flex-end"
     }
-  })(MuiMenuItem);
+})(MuiMenuItem);
 
 export default function PersistentDrawerLeft(props) {
     const { currentUser } = useContext(AuthContext);
@@ -124,7 +128,7 @@ export default function PersistentDrawerLeft(props) {
 
     const handleMenu = (event) => {
         setAnchorEl(event.currentTarget);
-      };
+    };
 
     const handleMenuClose = () => {
         setAnchorEl(null)
@@ -140,11 +144,12 @@ export default function PersistentDrawerLeft(props) {
     return (
         <div className={classes.root}>
             <CssBaseline />
-            <Dialog 
-                open={dialogOpen} 
-                handleClose={handleDialogClose} 
+            <Dialog
+                open={dialogOpen}
+                handleClose={handleDialogClose}
                 showAdvanced={props.showAdvanced}
                 currentSystem={props.currentSystem}
+                userId={currentUser.uid}
                 allSystems={props.allSystems}
                 handleShowAdvancedChange={props.handleShowAdvancedChange}
                 handleSystemChange={props.handleSystemChange}
@@ -162,7 +167,7 @@ export default function PersistentDrawerLeft(props) {
                 })}
             >
                 <Toolbar>
-                    <IconButton
+                    {/* <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         onClick={handleDrawerOpen}
@@ -170,28 +175,29 @@ export default function PersistentDrawerLeft(props) {
                         className={clsx(classes.menuButton, open && classes.hide)}
                     >
                         <MenuIcon />
-                    </IconButton>
+                    </IconButton> */}
                     <Grid container style={{ flexGrow: 1 }}>
                         {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
                         <Typography variant="h5" style={{ color: "black" }}>Лукошко</Typography>
                     </Grid>
-                    {/* {currentUser
+                    {currentUser
                         ?
-                        <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
-                            {currentUser.uid}
-                        </Typography>
+                        <FormControl variant="outlined" className={classes.formControl} size="small">
+                            <Select
+                                id="select-system"
+                                value={props.currentSystem}
+                                onChange={props.handleSystemChange}
+                            >
+                                {props.allSystems.map((system, i) => {
+                                    return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
+                                })}
+                            </Select>
+                        </FormControl>
                         : null
                     }
                     {currentUser
                         ?
-                        <Typography variant="body1" style={{ color: 'black', paddingLeft: 5, paddingRight: 5 }}>
-                            {currentUser.email}
-                        </Typography>
-                        : null
-                    } */}
-                    {currentUser
-                        ?
-                        <IconButton aria-label="add" size="small" onClick={handleDialogOpen} style={{marginRight: 10}}>
+                        <IconButton aria-label="add" size="small" onClick={handleDialogOpen} style={{ marginRight: 10 }}>
                             <AddIcon fontSize="large" style={{ color: 'black' }} />
                         </IconButton>
                         : null
@@ -213,19 +219,19 @@ export default function PersistentDrawerLeft(props) {
                                 id="menu-appbar"
                                 anchorEl={anchorEl}
                                 anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
+                                    vertical: 'top',
+                                    horizontal: 'right',
                                 }}
                                 keepMounted
                                 transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
+                                    vertical: 'top',
+                                    horizontal: 'right',
                                 }}
                                 open={menuOpen}
                                 onClose={handleMenuClose}
                             >
-                                <Grid container direction="column" alignItems="center" style={{padding: 10}}>
-                                    <Avatar src={currentUser.photoURL} style={{marginBottom: 8}} />
+                                <Grid container direction="column" alignItems="center" style={{ padding: 10 }}>
+                                    <Avatar src={currentUser.photoURL} style={{ marginBottom: 8 }} />
                                     <Typography variant="body2">{currentUser.displayName}</Typography>
                                     <Typography variant="body2">{currentUser.email}</Typography>
                                     <Typography variant="body2">ID: <Typography component="span" variant="subtitle2">{currentUser.uid}</Typography></Typography>
@@ -235,16 +241,9 @@ export default function PersistentDrawerLeft(props) {
                         </div>
                         : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
                     }
-                    {/* {currentUser
-                        ?
-                        <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={() => firebase.auth().signOut()}>
-                            выход
-                    </Button>
-                        : <Button style={{ borderColor: "black", color: 'black', marginLeft: 10, fontSize: 12 }} size="small" variant="outlined" onClick={signInWithGoogle}>вход</Button>
-                    } */}
                 </Toolbar>
             </AppBar>
-            <Drawer
+            {/* <Drawer
                 className={classes.drawer}
                 variant="persistent"
                 anchor="left"
@@ -260,53 +259,28 @@ export default function PersistentDrawerLeft(props) {
                 </div>
                 <Divider />
                 <Grid container>
-                <FormControl style={{minWidth: 120}}>
-                  <InputLabel id="select-system">System</InputLabel>
-                  <Select
-                    labelId="select-system"
-                    id="select-system"
-                    value={props.currentSystem}
-                    onChange={props.handleSystemChange}
-                  >
-                  {props.allSystems.map((system, i) => {
-                    return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
-                  })}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid container>
-                <Typography>System ID: {props.currentSystem}</Typography>
-              </Grid>
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter system's name" onChange={props.handleSystemNameChange} />
+                    <FormControl style={{ minWidth: 120 }}>
+                        <InputLabel id="select-system">Система</InputLabel>
+                        <Select
+                            labelId="select-system"
+                            id="select-system"
+                            value={props.currentSystem}
+                            onChange={props.handleSystemChange}
+                        >
+                            {props.allSystems.map((system, i) => {
+                                return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
+                            })}
+                        </Select>
+                    </FormControl>
                 </Grid>
-                <Grid item>
-                  <Button onClick={props.createTagSystem}>Create Tag System</Button>
+                <Grid container>
+                    <Typography>System ID: {props.currentSystem}</Typography>
                 </Grid>
-              </Grid>
-
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter user's ID" onChange={props.handleAddUserIdChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={props.addUserToSystem}>Add user</Button>
-                </Grid>
-              </Grid>
-              <Grid container>
-                <Grid item>
-                  <TextField placeholder="Enter systems's ID" onChange={props.handleAddSystemChange} />
-                </Grid>
-                <Grid item>
-                  <Button onClick={props.addSystem}>Add system</Button>
-                </Grid>
-              </Grid>
-            </Drawer>
+            </Drawer> */}
             <main style={{ padding: 0, height: '100%', background: 'transparent' }}
-                className={clsx(classes.content, {
-                    [classes.contentShift]: open,
-                })}
+                // className={clsx(classes.content, {
+                //     [classes.contentShift]: open,
+                // })}
             >
                 <div className={classes.drawerHeader} />
                 {props.children}

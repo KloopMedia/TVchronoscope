@@ -87,13 +87,14 @@ const ImgGrid = props => {
     return (
         <div>
             {pagination}
-            <Grid container justify="center" spacing={2}>
+            <Grid container justify="center">
                 {dataSlice.map((img_data, i) => (
-                    <Grid item key={img_data.get('key')}>
-                        <Card style={{width: 400}}>
+                    <Grid item key={img_data.get('key')} style={{padding: 8}}>
+                        {/* <Card style={{width: 400}}> */}
+                        <Card style={{width: 280}}>
                             <CardActionArea onClick={() => handleOpen(img_data)}>
                                 <CardMedia
-                                    style={{height: 300}}
+                                    style={{height: 250}}
                                     image={img_data.get('url')}
                                 />
                                 <CardContent>
