@@ -8,6 +8,9 @@ import { List } from "immutable"
 import React, { useState, useEffect } from "react";
 import ImageViewer from './ImageViewer'
 
+import TxtCardContent from './TxtCardContent'
+import ImgCardContent from './ImgCardContent'
+
 
 const rowsPP = 10;
 
@@ -16,7 +19,7 @@ const areEqual = (prevProps, nextProps) => {
         (prevProps.showAdvanced === nextProps.showAdvanced));
 }
 
-const ImgGrid = props => {
+const CardGrid = props => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(rowsPP);
     const [dataSlice, setDataSlice] = useState(List([]));
@@ -94,27 +97,11 @@ const ImgGrid = props => {
                         {/* <Card style={{width: 400}}> */}
                         <Card style={{width: 280}}>
                             <CardActionArea onClick={() => handleOpen(img_data)}>
-                                <CardMedia
-                                    style={{height: 250}}
-                                    image={img_data.get('url')}
-                                />
-                                <CardContent>
-                                    <Typography gutterBottom variant="h5" component="h2">
-                                        {props.showAdvanced && ('Tags: ' + img_data.get('tags'))}
-                                        {/*{img_data.get('distance').toFixed(2) + " " + img_data.get('date').toISOString()}*/}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary" component="div">
-                                        <p/>
-                                        Схожесть лица: {img_data.get('distance').toFixed(2)}
-                                        <p/>
-                                        {props.showAdvanced ?
-                                            ('Time: ' + img_data.get('date').toISOString())
-                                            :
-                                            'Дата: ' + img_data.get('date').toISOString().substring(0, 10)}
-                                        <p/>
-                                        {props.showAdvanced && ('Negtags: ' + img_data.get('negtags'))}
-                                    </Typography>
-                                </CardContent>
+                                <ImgCardContent 
+                                    showAdvanced={props.showAdvanced}
+                                    img_data={img_data}
+                                    >                                    
+                                </ImgCardContent>                                
                             </CardActionArea>
                             <CardActions style={{display: 'block', padding: 0}}>
                                 {props.showAdvanced &&
@@ -162,4 +149,4 @@ const ImgGrid = props => {
     )
 }
 
-export default React.memo(ImgGrid, areEqual);
+export default React.memo(CardGrid, areEqual);

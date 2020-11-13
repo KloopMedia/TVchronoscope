@@ -7,7 +7,7 @@ import loadImage from 'blueimp-load-image';
 
 import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
-import ImgGrid from "./Components/ImgGrid/ImgGrid";
+import CardGrid from "./Components/CardGrid/CardGrid";
 import getImgsFromImg from './lukoshko/api';
 import Appbar from "./Components/Appbar/PublicAppbar"
 import SearchIcon from '@material-ui/icons/Search';
@@ -477,7 +477,7 @@ class App extends Component {
         </Grid>
 
         <Grid container justify="center">{this.state.message}</Grid>
-        <ImgGrid data={this.state.filteredData}
+        <CardGrid data={this.state.filteredData}
           search={this.handleSearchClick}
           tagClick={this.handleRowRemoval}
           showAdvanced={this.state.showAdvanced}

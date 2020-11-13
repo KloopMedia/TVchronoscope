@@ -9,7 +9,7 @@ import loadImage from 'blueimp-load-image';
 import TagData from './Components/TagData/TagData';
 import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
-import ImgGrid from "./Components/ImgGrid/ImgGrid";
+import CardGrid from "./Components/CardGrid/CardGrid";
 import getImgsFromImg from './lukoshko/api';
 import Appbar from "./Components/Appbar/Appbar"
 
@@ -673,6 +673,9 @@ class App extends Component {
   static contextType = AuthContext
 
   render() {
+
+    console.log('Hakim')
+    console.log(this.state.filteredData)
     let charts = null;
     if (this.state.showCharts) {
       charts = <Charts
@@ -824,7 +827,7 @@ class App extends Component {
           }
 
           <Grid container justify="center">{this.state.message}</Grid>
-          <ImgGrid data={this.state.filteredData}
+          <CardGrid data={this.state.filteredData}
             search={this.handleSearchClick}
             tagClick={this.handleRowRemoval}
             showAdvanced={this.state.showAdvanced}
