@@ -336,23 +336,31 @@ class App extends Component {
 
     //Denormalize data by tag
     data.forEach(d => d.tags.forEach(t => {
-      d.tags = t
-      flatData.push(d)
+      console.log(t)
+      let tmp = {...d}
+      tmp.tags = t
+      // d.tags = t
+      flatData.push(tmp)
     }))
-
+    console.log("flatData", flatData)
     //Select time unit
     let day = timeFormat("%U");//timeFormat("%Y-%m-%d");
     //Determine data time extent given time unit
     let dataExtent = extent(data, d => day(d.date));
+    console.log("dataExtent", dataExtent)
     let timeRange = range(dataExtent[0], dataExtent[1]);
+    console.log("timeRange", timeRange)
     let nestedAllTagsDates = nest().key(d => day(d.date))
       .rollup(values => sum(values, d => +1))
       .map(flatData);
+    console.log("nestedAllTagsDates", nestedAllTagsDates)
     let nestedAllTags = timeRange.map(d => nestedAllTagsDates.get(d) || 0)
+    console.log("nestedAllTags", nestedAllTags)
     let nested = nest().key(d => d.tags)
       .key(d => day(d.date))
       .rollup(values => sum(values, d => +1))
       .map(flatData);
+    console.log("nested", nested)
 
     //let timeRange = timeDays(dataExtent[0], dataExtent[1]).map(d => day(d));
     let zeroPadded = nested.keys()
@@ -368,6 +376,12 @@ class App extends Component {
         values: d.values.map((t, i) => t / nestedAllTags[i] * 100)
       }
     });
+
+    console.log("zeroPadded: ", zeroPadded)
+    console.log("zeroPaddedPercent", zeroPaddedPercent)
+    console.log("nestedAllTags", nestedAllTags)
+    console.log("nestedAllTagsDates", nestedAllTagsDates)
+    console.log("timeRange", timeRange)
 
     this.setState({
       nestedData: zeroPadded,
