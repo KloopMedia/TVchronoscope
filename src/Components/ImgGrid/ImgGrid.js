@@ -1,7 +1,8 @@
 import {
     Button, Card, CardActionArea, CardActions,
     CardContent, CardMedia, Grid, Typography,
-    TablePagination
+    TablePagination,
+    Box
 } from "@material-ui/core";
 import { List } from "immutable"
 import React, { useState, useEffect } from "react";
@@ -115,9 +116,9 @@ const ImgGrid = props => {
                                     </Typography>
                                 </CardContent>
                             </CardActionArea>
-                            <CardActions>
+                            <CardActions style={{display: 'block', padding: 0}}>
                                 {props.showAdvanced &&
-                                <span>
+                                <Box>
                             <Button size="medium"
                                     color="primary"
                                     onClick={() => props.tagClick('tag', i)}>
@@ -138,15 +139,17 @@ const ImgGrid = props => {
                                     onClick={() => props.tagClick('clear', i)}>
                                 CLEAR
                             </Button>
-                        </span>
+                        </Box>
                                 }
                                 {img_data.get('facesInFrame') === 1 &&
-                                <Button size="medium"
-                                        color="primary"
-                                        justify="right"
-                                        onClick={() => props.search(i)}>
-                                    ПОИСК
-                                </Button>
+                                <Box>
+                                    <Button size="medium"
+                                            color="primary"
+                                            justify="right"
+                                            onClick={() => props.search(i)}>
+                                        ПОИСК
+                                    </Button>
+                                </Box>
                                 }
                             </CardActions>
                         </Card>

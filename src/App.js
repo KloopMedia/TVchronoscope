@@ -22,6 +22,8 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert'
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
@@ -63,7 +65,10 @@ class App extends Component {
     filter: "",
     hideTags: false,
     hideNegtags: false,
-    filterAll: true
+    filterAll: true,
+    snackbar: false,
+    alertReason: null,
+    alertMessage: ''
   }
 
   componentDidMount() {
@@ -196,12 +201,12 @@ class App extends Component {
       this.setState({ data: data })
       this.allFilter(data.toList(), true)
     } else {
-      alert('Fill TAG field')
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag'})
     }
   }
 
   tagRow = (action, index) => {
-    if (this.state.tag !== "") {
+    if (this.state.tag !== "" || action === 'clear') {
       let data = this.state.data;
       const row = this.getUpdatedTags(action,
         this.state.pageSlice.get(index),
@@ -220,7 +225,9 @@ class App extends Component {
       this.allFilter(data.toList(), true)
 
     } else {
-      alert('Fill TAG field')
+      if (action !== 'clear') {
+        this.setState({alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag'})
+      }
     }
   }
 
@@ -487,7 +494,7 @@ class App extends Component {
 
   handlePostData = async (url = null) => {
     if ((!this.state.file) && url === null) {
-      alert("No file to upload")
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Выберите файл для загрузки"})
       return 0
     }
     this.setState({ spinner: true })
@@ -545,15 +552,16 @@ class App extends Component {
           let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
           userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: this.state.systemName }) })
           rootRef.doc(doc.id).collection("systemAdmins").doc(this.context.currentUser.uid).set({})
-          console.log("Tag System successfuly created")
-        })
+          this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Система успешно создана'})
+          // console.log("Tag System successfuly created")
+        }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: error.message}))
       }
       else {
-        alert("System name cannot be 'default'!")
+        this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть 'default'"})
       }
     }
     else {
-      alert("System name cannot be empty!")
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть пустым"})
     }
 
   }
@@ -567,7 +575,7 @@ class App extends Component {
         this.allFilter()
       }
       else {
-        alert("System doesn't exist")
+        this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует'})
       }
     })
   }
@@ -577,31 +585,40 @@ class App extends Component {
   }
 
   addUserToSystem = () => {
-    if (this.state.currentSystem) {
+    if (this.state.addUserId.length > 0) {
       if (this.state.currentSystemName !== 'default') {
         let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
         let adminsRef = rootRef.collection("systemAdmins").doc(this.state.addUserId)
         adminsRef.set({}).then(() => {
-          alert("Пользователь успешно добавлен")
-        })
+          this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Пользователь успешно добавлен'})
+        }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: error.message}))
       }
       else {
-        alert("Error: default system is private")
+        this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Default system is private'})
       }
+    }
+    else {
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "ID пользователя не может быть пустым"})
     }
   }
 
   addSystem = () => {
-    let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.addSystemId)
-    rootRef.get().then(doc => {
-      if (doc && doc.exists) {
-        let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
-        userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: doc.data().systemName }) })
-      }
-      else {
-        alert("Система не существует")
-      }
-    }).catch(error => alert(error))
+    if (this.state.addSystemId.length > 0) {
+      let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.addSystemId)
+      rootRef.get().then(doc => {
+        if (doc && doc.exists) {
+          let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
+          userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: doc.data().systemName }) })
+          .then(() => this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Система добавлена'}))
+        }
+        else {
+          this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует'})
+        }
+      }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует или у Вас нет прав доступа'}))
+    }
+    else {
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "ID системы не может быть пустым"})
+    }
   }
 
   handleAddSystemChange = (event) => {
@@ -628,6 +645,14 @@ class App extends Component {
 
   handleFilterAllChange = (event) => {
     this.setState({ filterAll: event.target.checked })
+  }
+
+  handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    this.setState({snackbar: false});
   }
 
   static contextType = AuthContext
@@ -666,6 +691,17 @@ class App extends Component {
         addUserToSystem={this.addUserToSystem}
       >
         <div className="App">
+        <Grid>
+          <Snackbar 
+            open={this.state.snackbar}
+            autoHideDuration={6000}
+            onClose={this.handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={this.handleCloseSnackbar} severity={this.state.alertReason} variant="filled">
+              {this.state.alertMessage}
+            </Alert>
+          </Snackbar>
+        </Grid>
         <Grid container justify="center" style={{padding: 40}}>
           <Typography>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
           <br />
