@@ -40,7 +40,10 @@ class App extends Component {
     showAdvanced: false,
     mergeData: false,
     message: "",
-    pageSlice: null
+    pageSlice: null,
+    snackbar: false,
+    alertReason: null,
+    alertMessage: ''
   }  
 
   excludeTagNegtag = (data) => {
@@ -358,6 +361,14 @@ class App extends Component {
 
   returnPageSlice = (pageSlice) => {
     this.setState({pageSlice: pageSlice})
+  }
+
+  handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    this.setState({snackbar: false});
   }
 
 
