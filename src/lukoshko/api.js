@@ -1,6 +1,6 @@
 import { List, Set, Map } from 'immutable';
 
-const TOKEN = 'TDlRJi8ORMGVrMedVkZDXsUDK'
+const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 
 const getImgsFromImg = async (radius, img=null, urls=null) => {
     const formData = new FormData();
@@ -16,7 +16,7 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
     }
 
     try {
-        const response = await fetch('https://lukoshkoapi.kloop.io:5000/', {
+        const response = await fetch('http://9e94093f8750.sn.mynetname.net:5000/', {
             method: 'POST',
             body: formData
         });
