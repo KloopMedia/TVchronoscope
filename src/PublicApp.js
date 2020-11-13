@@ -10,6 +10,10 @@ import Dropzone from './Components/UploadFile/Dropzone';
 import ImgGrid from "./Components/ImgGrid/ImgGrid";
 import getImgsFromImg from './lukoshko/api';
 import Appbar from "./Components/Appbar/PublicAppbar"
+import SearchIcon from '@material-ui/icons/Search';
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert'
+import Tooltip from '@material-ui/core/Tooltip'
 import firebase from './util/Firebase'
 
 class App extends Component {
@@ -377,65 +381,101 @@ class App extends Component {
     }
 
     return (
-        <div className="App">
-          <Appbar />
-          <Typography style={{padding: 5}}>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
-          <Grid container
-                direction="column"
-                alignItems="center"
-                justify="center">
-            <Grid container justify="center">
-              <Dropzone handleChange={this.handleFileChange}
-                        handleClick={this.handleSnackbarClick}
-                        setImage={this.setInitial}/>
+      <Appbar
+      showAdvanced={this.state.showAdvanced}
+      currentSystem={this.state.currentSystem}
+      allSystems={this.state.allSystems}
+      handleShowAdvancedChange={this.handleShowAdvancedChange}
+      handleSystemChange={this.handleSystemChange}
+      handleSystemNameChange={this.handleSystemNameChange}
+      handleAddSystemChange={this.handleAddSystemChange}
+      handleAddUserIdChange={this.handleAddUserIdChange}
+      createTagSystem={this.createTagSystem}
+      addSystem={this.addSystem}
+      addUserToSystem={this.addUserToSystem}
+    >
+      <div className="App">
+      <Grid>
+        <Snackbar 
+          open={this.state.snackbar}
+          autoHideDuration={6000}
+          onClose={this.handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert onClose={this.handleCloseSnackbar} severity={this.state.alertReason} variant="filled">
+            {this.state.alertMessage}
+          </Alert>
+        </Snackbar>
+      </Grid>
+      <Grid container justify="center" style={{padding: 40}}>
+        <Typography>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
+        <br />
+        <Typography>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
+      </Grid>
+        <Grid container
+          direction="column"
+          alignItems="center"
+          justify="center">
+          <Grid container justify="center" style={{
+            borderWidth: 3,
+            borderRadius: 2,
+            borderColor: '#000000',
+            borderStyle: 'dashed',
+            width: "auto",
+
+          }}
+          >
+            <Dropzone handleChange={this.handleFileChange}
+              handleClick={this.handleSnackbarClick}
+              setImage={this.setInitial} />
+            {this.state.initialImage ?
+              <img src={this.state.initialImage}
+                alt="initial_image"
+                style={{ height: 300 }} />
+              :
+              <Grid style={{ width: 300, borderLeft: '3px dashed black', }}></Grid>
+            }
+          </Grid>
+          <br />
+          
+          <Grid container justify="center" alignItems="center">
+            <Grid item style={{ padding: 8 }}>
+              <TextField variant="outlined"
+                id="radius"
+                size="small"
+                label="Схожесть лица"
+                value={this.state.APIRadius}
+                onChange={this.handleAPIRadiusChange} />
             </Grid>
-            <Grid container justify="center">
-              {this.state.initialImage ?
-                  <img src={this.state.initialImage}
-                       alt="initial_image"
-                       style={{height: 300}}/>
-                  :
-                  null
+            <Grid item>
+              <Tooltip title="Найти похожие лица" placement="top">
+                <Button variant="contained" style={{ background: 'green' }}
+                  // size="small"
+                  onClick={() => this.handlePostData(this.state.initialImage)}>
+                  <SearchIcon style={{ fill: "white" }} />
+                </Button>
+              </Tooltip>
+            </Grid>
+            <Grid item style={{ padding: 8 }}>
+              {this.state.spinner ?
+                <CircularProgress size={32} style={{ color: 'grey' }} />
+                :
+                null
               }
             </Grid>
-            <p />
-            <Typography style={{padding: 15}}>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
-            <Grid container justify="center" spacing={2}>
-              <Grid item>
-              <TextField variant="outlined"
-                         id="radius"
-                         size="small"
-                         label="Схожесть лица"
-                         value={this.state.APIRadius}
-                         onChange={this.handleAPIRadiusChange}/>
-              </Grid>
-              <Grid item>
-              <Button variant="contained"
-                      size="small"
-                      onClick={() => this.handlePostData(this.state.initialImage)}>Найти похожие лица</Button>
-              </Grid>
-              <Grid item>
-                {this.state.spinner ?
-                    <CircularProgress size={32} style={{color: 'grey'}}/>
-                    :
-                    null
-                }
-              </Grid>
-            </Grid>
           </Grid>
-          <p />
+        </Grid>
 
-          <div justify="center">{this.state.message}</div>
-          <p />
-          <ImgGrid data={this.state.filteredData}
-                   search={this.handleSearchClick}
-                   tagClick={this.handleRowRemoval}
+        <Grid container justify="center">{this.state.message}</Grid>
+        <ImgGrid data={this.state.filteredData}
+          search={this.handleSearchClick}
+          tagClick={this.handleRowRemoval}
           showAdvanced={this.state.showAdvanced}
           returnRowsPerPage={this.returnRowsPerPage}
           returnCurrentPage={this.returnCurrentPage}
           returnPageSlice={this.returnPageSlice}
-          />
-        </div>
+        />
+      </div>
+    </Appbar>
     );
   }
 }
