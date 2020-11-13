@@ -329,7 +329,7 @@ class App extends Component {
 
   handlePostData = async (url=null) => {
     if ((!this.state.file) && url===null) {
-      alert("No file to upload")
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Выберите файл для загрузки"})
       return 0
     }
     this.setState({spinner: true})
@@ -341,7 +341,7 @@ class App extends Component {
       data = await getImgsFromImg(this.state.APIRadius, null, [url])
     }
     if (data.size === 0) {
-      this.setState({message: "Ничего не найдено. Попробуйте уменьшить схожесть лица."})
+      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Ничего не найдено. Попробуйте уменьшить схожесть лица."})
     } else {
       this.setState({message: ""})
     }
