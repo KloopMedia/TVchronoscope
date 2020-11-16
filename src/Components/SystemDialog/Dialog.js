@@ -15,6 +15,9 @@ import AddIcon from '@material-ui/icons/Add';
 import { Box } from '@material-ui/core';
 import TextField from '@material-ui/core/TextField'
 import Divider from '@material-ui/core/Divider'
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import MuiMenuItem from '@material-ui/core/MenuItem';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -30,6 +33,10 @@ const useStyles = makeStyles((theme) => ({
     background: 'black',
     marginTop: 7,
     marginBottom: 10
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
   }
 }));
 
@@ -45,6 +52,12 @@ const styles = (theme) => ({
     color: theme.palette.grey[500],
   },
 });
+
+const MenuItem = withStyles({
+  root: {
+      justifyContent: "flex-end"
+  }
+})(MuiMenuItem);
 
 const DialogTitle = withStyles(styles)((props) => {
   const { children, classes, onClose, ...other } = props;
@@ -80,9 +93,19 @@ export default function CustomizedDialogs(props) {
     <div>
       <Dialog onClose={props.handleClose} aria-labelledby="customized-dialog-title" open={props.open} fullWidth={true} maxWidth={"md"} >
         <DialogTitle id="customized-dialog-title" onClose={props.handleClose}>
-          <Box display="flex">
+          <Box display="flex" pr={5}>
+            <FormControl variant="outlined" className={classes.formControl} size="small">
+                <Select
+                    id="select-system"
+                    value={props.currentSystem}
+                    onChange={props.handleSystemChange}
+                >
+                    {props.allSystems.map((system, i) => {
+                        return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
+                    })}
+                </Select>
+            </FormControl>
             <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID системы: <Typography component="span" variant="subtitle2">{props.currentSystem}</Typography></Typography>
-            <Divider orientation="vertical" flexItem style={{ marginRight: 5, marginLeft: 5}} />
             <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID пользователя: <Typography component="span" variant="subtitle2">{props.userId}</Typography></Typography>
           </Box>
         </DialogTitle>
