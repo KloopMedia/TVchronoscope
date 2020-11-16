@@ -93,7 +93,7 @@ export default function CustomizedDialogs(props) {
     <div>
       <Dialog onClose={props.handleClose} aria-labelledby="customized-dialog-title" open={props.open} fullWidth={true} maxWidth={"md"} >
         <DialogTitle id="customized-dialog-title" onClose={props.handleClose}>
-          <Box display="flex" pr={5}>
+          <Grid container justify="center" style={{paddingRight: 20, paddingLeft: 20}}>
             <FormControl variant="outlined" className={classes.formControl} size="small">
                 <Select
                     id="select-system"
@@ -107,7 +107,7 @@ export default function CustomizedDialogs(props) {
             </FormControl>
             <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID системы: <Typography component="span" variant="subtitle2">{props.currentSystem}</Typography></Typography>
             <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID пользователя: <Typography component="span" variant="subtitle2">{props.userId}</Typography></Typography>
-          </Box>
+          </Grid>
         </DialogTitle>
         <DialogContent>
           <Box display="flex" justifyItems="center">
