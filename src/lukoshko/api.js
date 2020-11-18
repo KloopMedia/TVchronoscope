@@ -34,6 +34,7 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
             const key = frameId + '_' + box.join('_')
             const img = Map({
                 key: key,
+                type: 'image',
                 date: new Date(v.appearance_time),
                 box: JSON.parse(v.object_box),
                 facesInFrame: v.objects_in_frame,

@@ -73,12 +73,14 @@ const CardGrid = props => {
     )
 
     const handleOpen = (img_data) => {
-        const img = img_data.get('url')
-        const distance = img_data.get('distance').toFixed(2)
-        setOpen(true)
-        setImage(img)
-        setTitle("Distance " + distance)
-        console.log(img)
+        if (img_data.get('type') !== "text") {
+            const img = img_data.get('url')
+            const distance = img_data.get('distance').toFixed(2)
+            setOpen(true)
+            setImage(img)
+            setTitle("Distance " + distance)
+            console.log(img)
+        }
     }
 
     const handleClose = () => {
@@ -93,50 +95,51 @@ const CardGrid = props => {
             {pagination}
             <Grid container justify="center">
                 {dataSlice.map((img_data, i) => (
-                    <Grid item key={img_data.get('key')} style={{padding: 8}}>
+                    <Grid item key={img_data.get('key')} style={{ padding: 8 }}>
                         {/* <Card style={{width: 400}}> */}
-                        <Card style={{width: 280}}>
+                        <Card style={{ width: 280 }}>
                             <CardActionArea onClick={() => handleOpen(img_data)}>
-                                <ImgCardContent 
-                                    showAdvanced={props.showAdvanced}
-                                    img_data={img_data}
-                                    >                                    
-                                </ImgCardContent>                                
+                                {img_data.get('type') !== "text"
+                                    ?
+                                    <ImgCardContent showAdvanced={props.showAdvanced} img_data={img_data}/>
+                                    :
+                                    <TxtCardContent showAdvanced={props.showAdvanced} img_data={img_data}/>
+                                }
                             </CardActionArea>
-                            <CardActions style={{display: 'block', padding: 0}}>
+                            <CardActions style={{ display: 'block', padding: 0 }}>
                                 {props.showAdvanced &&
-                                <Box>
-                            <Button size="medium"
-                                    color="primary"
-                                    onClick={() => props.tagClick('tag', i)}>
-                                TAG
+                                    <Box>
+                                        <Button size="medium"
+                                            color="primary"
+                                            onClick={() => props.tagClick('tag', i)}>
+                                            TAG
                             </Button>
-                            <Button size="medium"
-                                    color="primary"
-                                    onClick={() => props.tagClick('negtag', i)}>
-                                NEGTAG
+                                        <Button size="medium"
+                                            color="primary"
+                                            onClick={() => props.tagClick('negtag', i)}>
+                                            NEGTAG
                             </Button>
-                            <Button size="medium"
-                                    color="primary"
-                                    onClick={() => props.tagClick('untag', i)}>
-                                UNTAG
+                                        <Button size="medium"
+                                            color="primary"
+                                            onClick={() => props.tagClick('untag', i)}>
+                                            UNTAG
                             </Button>
-                            <Button size="medium"
-                                    color="primary"
-                                    onClick={() => props.tagClick('clear', i)}>
-                                CLEAR
+                                        <Button size="medium"
+                                            color="primary"
+                                            onClick={() => props.tagClick('clear', i)}>
+                                            CLEAR
                             </Button>
-                        </Box>
+                                    </Box>
                                 }
                                 {img_data.get('facesInFrame') === 1 &&
-                                <Box>
-                                    <Button size="medium"
+                                    <Box>
+                                        <Button size="medium"
                                             color="primary"
                                             justify="right"
                                             onClick={() => props.search(i)}>
-                                        ПОИСК
+                                            ПОИСК
                                     </Button>
-                                </Box>
+                                    </Box>
                                 }
                             </CardActions>
                         </Card>

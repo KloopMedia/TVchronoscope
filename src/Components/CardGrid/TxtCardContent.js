@@ -11,13 +11,16 @@ export default function TxtCardContent(props) {
   
       return (
           <CardContent>
+            <Box style={{maxHeight: 200, overflow: 'auto'}}>
+            <Typography>{props.img_data.get('text')}</Typography>
+            </Box>
+            <br/>
             <Typography gutterBottom variant="h5" component="h2">
                 {props.showAdvanced && ('Tags: ' + props.img_data.get('tags'))}
-                {/*{img_data.get('distance').toFixed(2) + " " + img_data.get('date').toISOString()}*/}
             </Typography>
             <Typography variant="body2" color="textSecondary" component="div">
                 <p/>
-                Схожесть лица: {props.img_data.get('distance').toFixed(2)}
+                Аккаунт: {props.img_data.get('post_account')}
                 <p/>
                 {props.showAdvanced ?
                     ('Time: ' + props.img_data.get('date').toISOString())

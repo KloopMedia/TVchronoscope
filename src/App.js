@@ -11,6 +11,7 @@ import Charts from './Components/Charts/Charts';
 import Dropzone from './Components/UploadFile/Dropzone';
 import CardGrid from "./Components/CardGrid/CardGrid";
 import getImgsFromImg from './lukoshko/api';
+import getTextsFromText from './lukoshko/textAPI'
 import Appbar from "./Components/Appbar/Appbar"
 
 import Switch from "@material-ui/core/Switch";
@@ -514,17 +515,23 @@ class App extends Component {
   };
 
   handlePostData = async (url = null) => {
-    if ((!this.state.file) && url === null) {
+    if ((!this.state.file) && url === null && this.state.inputMode === 'image') {
       this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Выберите файл для загрузки"})
       return 0
     }
     this.setState({ spinner: true })
     console.log("Sending data")
     let data
-    if (this.isInternalLink(url)) {
-      data = await getImgsFromImg(this.state.APIRadius, this.state.file)
-    } else {
-      data = await getImgsFromImg(this.state.APIRadius, null, [url])
+    if (this.state.inputMode === 'image') {
+      if (this.isInternalLink(url)) {
+        data = await getImgsFromImg(this.state.APIRadius, this.state.file)
+      } else {
+        data = await getImgsFromImg(this.state.APIRadius, null, [url])
+      }
+    }
+    else if (this.state.inputMode === 'text') {
+      data = await getTextsFromText(100, this.state.textInput)
+      console.log(data)
     }
     if (data.size === 0) {
       // this.setState({ message: "Ничего не найдено. Попробуйте уменьшить схожесть лица." })
@@ -743,9 +750,6 @@ class App extends Component {
   static contextType = AuthContext
 
   render() {
-
-    console.log('Hakim')
-    console.log(this.state.filteredData)
     let charts = null;
     if (this.state.showCharts) {
       charts = <Charts
@@ -931,6 +935,7 @@ class App extends Component {
 
           <Grid container justify="center">{this.state.message}</Grid>
           <CardGrid data={this.state.filteredData}
+            inputMode={this.state.inputMode}
             search={this.handleSearchClick}
             tagClick={this.handleRowRemoval}
             showAdvanced={this.state.showAdvanced}
