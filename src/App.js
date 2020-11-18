@@ -24,6 +24,11 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Snackbar from '@material-ui/core/Snackbar';
 import Alert from '@material-ui/lab/Alert'
+import Box from '@material-ui/core/Box'
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import TitleIcon from '@material-ui/icons/Title';
+import ImageIcon from '@material-ui/icons/Image';
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
@@ -68,7 +73,9 @@ class App extends Component {
     filterAll: true,
     snackbar: false,
     alertReason: null,
-    alertMessage: ''
+    alertMessage: '',
+    inputMode: 'image',
+    textInput: ''
   }
 
   componentDidMount() {
@@ -670,6 +677,69 @@ class App extends Component {
     this.setState({snackbar: false});
   }
 
+  handleInputModeSwitch = (event, newMode) => {
+    if (newMode !== null) {
+      this.setState({inputMode: newMode});
+    }
+  }
+
+  handleTextInputChange = (event) => {
+    this.setState({textInput: event.target.value})
+  }
+
+  // copySystem = () => {
+  //   let firstSystem = []
+  //   let firstSystemTags = []
+  //   let firstSystemNegs = []
+
+  //   let secondSystem = []
+  //   let secondSystemTags = []
+  //   let secondSystemNegs = []
+
+
+  //   let firstSystemRef = firebase.firestore().collection("tagSystems").doc("WE3eFAta5GnbOw6Sofkl")
+  //   let secondSystemRef = firebase.firestore().collection("tagSystems").doc("Xt2fZsTR0FbPaDWzdq5t")
+  //   let targetSystemRef = firebase.firestore().collection("tagSystems").doc("z1nzmjxyp6tpPqPJrPcy")
+
+  //   firstSystemRef.get().then(doc => {
+  //     firstSystemTags = doc.data().tags
+  //     firstSystemNegs = doc.data().negtags
+  //   })
+
+  //   secondSystemRef.get().then(doc => {
+  //     secondSystemTags = doc.data().tags
+  //     secondSystemNegs = doc.data().negtags
+  //   })
+
+  //   firstSystemRef.collection("frames").get().then(snap => {
+  //     snap.forEach(doc => {
+  //       firstSystem.push({id: doc.id, data: doc.data()})
+  //     })
+  //   })
+  //   .then(() => {
+  //     secondSystemRef.collection("frames").get().then(snap => {
+  //       snap.forEach(doc => {
+  //         secondSystem.push({id: doc.id, data: doc.data()})
+  //       })
+  //     })
+  //     .then(() => {
+  //       console.log(firstSystem, secondSystem)
+  //       console.log(firstSystemTags, firstSystemNegs)
+  //       console.log(secondSystemTags, secondSystemNegs)
+  //       targetSystemRef.update({
+  //         tags: firebase.firestore.FieldValue.arrayUnion(...firstSystemTags, ...secondSystemTags), 
+  //         negtags: firebase.firestore.FieldValue.arrayUnion(...firstSystemNegs, ...secondSystemNegs)
+  //       })
+  //       firstSystem.forEach(row => {
+  //         targetSystemRef.collection("frames").doc(row.id).set(row.data)
+  //       })
+  //       secondSystem.forEach(row => {
+  //         targetSystemRef.collection("frames").doc(row.id).set(row.data)
+  //       })
+  //     })
+  //   })
+  // }
+
   static contextType = AuthContext
 
   render() {
@@ -709,6 +779,7 @@ class App extends Component {
         addUserToSystem={this.addUserToSystem}
       >
         <div className="App">
+        {/* <Button onClick={this.copySystem}>COPY</Button> */}
         <Grid>
           <Snackbar 
             open={this.state.snackbar}
@@ -729,25 +800,57 @@ class App extends Component {
             direction="column"
             alignItems="center"
             justify="center">
+            <Box>
+                <ToggleButtonGroup
+                  value={this.state.inputMode}
+                  exclusive
+                  size="small"
+                  onChange={this.handleInputModeSwitch}
+                  aria-label="input mode"
+                >
+                  <ToggleButton value="image" aria-label="image">
+                    <Typography style={{paddingRight: 5}}>Фото</Typography><ImageIcon />
+                  </ToggleButton>
+                  <ToggleButton value="text" aria-label="text">
+                    <TitleIcon /><Typography style={{paddingLeft: 5}}>Текст</Typography>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
             <Grid container justify="center" style={{
               borderWidth: 3,
               borderRadius: 2,
               borderColor: '#000000',
               borderStyle: 'dashed',
               width: "auto",
-
+              position: "relative"
             }}
             >
-              <Dropzone handleChange={this.handleFileChange}
-                handleClick={this.handleSnackbarClick}
-                setImage={this.setInitial} />
-              {this.state.initialImage ?
-                <img src={this.state.initialImage}
-                  alt="initial_image"
-                  style={{ height: 300 }} />
-                :
-                <Grid style={{ width: 300, borderLeft: '3px dashed black', }}></Grid>
-              }
+              {this.state.inputMode === 'image' ? 
+                <Box display="flex">
+                  <Dropzone handleChange={this.handleFileChange}
+                    handleClick={this.handleSnackbarClick}
+                    setImage={this.setInitial} />
+                  {this.state.initialImage ?
+                    <img src={this.state.initialImage}
+                      alt="initial_image"
+                      style={{ height: 300 }} />
+                    :
+                    <Grid style={{ width: 300, borderLeft: '3px dashed black', }}></Grid>
+                  }
+                </Box> : 
+                <Box style={{width: 600}}>
+                  <TextField
+                    id="standard-multiline-static"
+                    onChange={this.handleTextInputChange}
+                    multiline
+                    fullWidth
+                    rows={15}
+                    placeholder="Введите текст"
+                    InputProps={{
+                      disableUnderline: true
+                    }}
+                  />
+                </Box>}
             </Grid>
             <br />
             
