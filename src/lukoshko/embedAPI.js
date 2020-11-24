@@ -2,15 +2,15 @@ import { List, Set, Map } from 'immutable';
 
 const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 
-const getTextsFromText = async (limit, text=null) => {
+const getTextsFromEmbed = async (radius, sentences=null) => {
     const formData = new FormData();
 
     formData.append('token', TOKEN)
-    formData.append('action', 'text_search')
-    formData.append('limit', limit)
+    formData.append('action', 'text_range_search')
+    formData.append('radius', radius)
     // formData.append('with_embeddings', 'False')
-    if (text !== null) {
-        formData.append('text', text)
+    if (sentences !== null) {
+        formData.append('sentences', sentences)
     } 
     else {
         alert("Ошибка: Нет текста")
@@ -26,23 +26,17 @@ const getTextsFromText = async (limit, text=null) => {
         console.log(result)
 
         let data = {}
-        await result.forEach((d, i) => {
-            let key = d.faiss_index.toString()
-            console.log(key)
+        Object.values(result[0].metadata).forEach((d, i) => {
+            const key = d.post_id + '/' + d.clean_sentence
             const frame = Map({
                 key: key,
-                type: 'text',
-                text: d.post_text,
-                account: d.account,
-                sentence: d.sentence,
-                comments_count: d.comments_count,
+                type: 'embed',
+                id: d.post_id,
+                distance: d.distance,
                 clean_sentence: d.clean_sentence,
-                post_id: d.post_id,
-                post_img_files: d.post_img_files,
-                post_img_urls: d.post_img_urls,
-                likes_count: d.likes_count,
+                text: d.post_text,
+                sentence: d.sentence,
                 date: new Date(d.post_date),
-                post_tags: d.post_tags,
                 tags: Set([]),
                 negtags: Set([])
             })
@@ -53,9 +47,8 @@ const getTextsFromText = async (limit, text=null) => {
 
     } catch (error) {
         alert('Пожалуйста убедитесь, что на фото есть одно лицо, и что ваше Интернет-соединение стабильно.', error)
-        console.log(error)
         return Map({})
     }
 }
 
-export default getTextsFromText;
+export default getTextsFromEmbed;

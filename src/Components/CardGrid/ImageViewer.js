@@ -72,7 +72,8 @@ export default function CustomizedDialogs(props) {
             {props.title}
             </DialogTitle>
             <DialogContent dividers>
-                <img src={props.image} alt="Girl in a jacket" width="100%" height="100%" />
+                {props.image && <img src={props.image} alt="Girl in a jacket" width="100%" height="100%" />}
+                {props.text && <Typography style={{padding: 20}}>{props.text}</Typography>}
             </DialogContent>
             {/* <DialogActions>
             <Button autoFocus onClick={() => download()} color="primary">

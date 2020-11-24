@@ -12,6 +12,7 @@ import Dropzone from './Components/UploadFile/Dropzone';
 import CardGrid from "./Components/CardGrid/CardGrid";
 import getImgsFromImg from './lukoshko/api';
 import getTextsFromText from './lukoshko/textAPI'
+import getTextsFromEmbed from './lukoshko/embedAPI'
 import Appbar from "./Components/Appbar/Appbar"
 
 import Switch from "@material-ui/core/Switch";
@@ -30,6 +31,7 @@ import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import TitleIcon from '@material-ui/icons/Title';
 import ImageIcon from '@material-ui/icons/Image';
+import DescriptionIcon from '@material-ui/icons/Description';
 
 import { AuthContext } from './util/Auth';
 import firebase from './util/Firebase'
@@ -76,7 +78,10 @@ class App extends Component {
     alertReason: null,
     alertMessage: '',
     inputMode: 'image',
-    textInput: ''
+    textInput: '',
+    embedInput: '',
+    limit: 100,
+    embedRadius: 1.5
   }
 
   componentDidMount() {
@@ -209,7 +214,7 @@ class App extends Component {
       this.setState({ data: data })
       this.allFilter(data.toList(), true)
     } else {
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag'})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag' })
     }
   }
 
@@ -234,7 +239,7 @@ class App extends Component {
 
     } else {
       if (action !== 'clear') {
-        this.setState({alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag'})
+        this.setState({ alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag' })
       }
     }
   }
@@ -266,6 +271,7 @@ class App extends Component {
         modified: firebase.firestore.FieldValue.serverTimestamp(),
         ...body
       }
+      console.log(docData)
       if (docExist) {
         frameRef.update(docData)
       }
@@ -281,6 +287,7 @@ class App extends Component {
         modified: firebase.firestore.FieldValue.serverTimestamp(),
         ...body
       }
+      console.log(docData)
       if (docExist) {
         frameRef.update(docData)
       }
@@ -345,7 +352,7 @@ class App extends Component {
     //Denormalize data by tag
     data.forEach(d => d.tags.forEach(t => {
       console.log(t)
-      let tmp = {...d}
+      let tmp = { ...d }
       tmp.tags = t
       // d.tags = t
       flatData.push(tmp)
@@ -516,12 +523,13 @@ class App extends Component {
 
   handlePostData = async (url = null) => {
     if ((!this.state.file) && url === null && this.state.inputMode === 'image') {
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Выберите файл для загрузки"})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "Выберите файл для загрузки" })
       return 0
     }
     this.setState({ spinner: true })
     console.log("Sending data")
     let data
+    console.log(this.state.inputMode)
     if (this.state.inputMode === 'image') {
       if (this.isInternalLink(url)) {
         data = await getImgsFromImg(this.state.APIRadius, this.state.file)
@@ -529,13 +537,18 @@ class App extends Component {
         data = await getImgsFromImg(this.state.APIRadius, null, [url])
       }
     }
+    else if (this.state.inputMode === 'embed') {
+      let input = this.state.embedInput.split(',')
+      data = await getTextsFromEmbed(this.state.embedRadius, input)
+      console.log(data.toJS())
+    }
     else if (this.state.inputMode === 'text') {
-      data = await getTextsFromText(100, this.state.textInput)
-      console.log(data)
+      data = await getTextsFromText(this.state.limit, this.state.textInput)
+      console.log(data.toJS())
     }
     if (data.size === 0) {
       // this.setState({ message: "Ничего не найдено. Попробуйте уменьшить схожесть лица." })
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Ничего не найдено. Попробуйте уменьшить схожесть лица."})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "Ничего не найдено. Попробуйте уменьшить схожесть лица." })
     } else {
       this.setState({ message: "" })
     }
@@ -581,16 +594,16 @@ class App extends Component {
           let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
           userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: this.state.systemName }) })
           rootRef.doc(doc.id).collection("systemAdmins").doc(this.context.currentUser.uid).set({})
-          this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Система успешно создана'})
+          this.setState({ alertReason: 'success', snackbar: true, alertMessage: 'Система успешно создана' })
           // console.log("Tag System successfuly created")
-        }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: error.message}))
+        }).catch(error => this.setState({ alertReason: 'error', snackbar: true, alertMessage: error.message }))
       }
       else {
-        this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть 'default'"})
+        this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть 'default'" })
       }
     }
     else {
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть пустым"})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "Имя системы не может быть пустым" })
     }
 
   }
@@ -604,7 +617,7 @@ class App extends Component {
         this.allFilter()
       }
       else {
-        this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует'})
+        this.setState({ alertReason: 'error', snackbar: true, alertMessage: 'Система не существует' })
       }
     })
   }
@@ -619,15 +632,15 @@ class App extends Component {
         let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
         let adminsRef = rootRef.collection("systemAdmins").doc(this.state.addUserId)
         adminsRef.set({}).then(() => {
-          this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Пользователь успешно добавлен'})
-        }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: error.message}))
+          this.setState({ alertReason: 'success', snackbar: true, alertMessage: 'Пользователь успешно добавлен' })
+        }).catch(error => this.setState({ alertReason: 'error', snackbar: true, alertMessage: error.message }))
       }
       else {
-        this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Default system is private'})
+        this.setState({ alertReason: 'error', snackbar: true, alertMessage: 'Default system is private' })
       }
     }
     else {
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "ID пользователя не может быть пустым"})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "ID пользователя не может быть пустым" })
     }
   }
 
@@ -638,15 +651,15 @@ class App extends Component {
         if (doc && doc.exists) {
           let userRef = firebase.firestore().collection("users").doc(this.context.currentUser.uid)
           userRef.update({ tagSystems: firebase.firestore.FieldValue.arrayUnion({ id: doc.id, name: doc.data().systemName }) })
-          .then(() => this.setState({alertReason: 'success', snackbar: true, alertMessage: 'Система добавлена'}))
+            .then(() => this.setState({ alertReason: 'success', snackbar: true, alertMessage: 'Система добавлена' }))
         }
         else {
-          this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует'})
+          this.setState({ alertReason: 'error', snackbar: true, alertMessage: 'Система не существует' })
         }
-      }).catch(error => this.setState({alertReason: 'error', snackbar: true, alertMessage: 'Система не существует или у Вас нет прав доступа'}))
+      }).catch(error => this.setState({ alertReason: 'error', snackbar: true, alertMessage: 'Система не существует или у Вас нет прав доступа' }))
     }
     else {
-      this.setState({alertReason: 'warning', snackbar: true, alertMessage: "ID системы не может быть пустым"})
+      this.setState({ alertReason: 'warning', snackbar: true, alertMessage: "ID системы не может быть пустым" })
     }
   }
 
@@ -681,17 +694,29 @@ class App extends Component {
       return;
     }
 
-    this.setState({snackbar: false});
+    this.setState({ snackbar: false });
   }
 
   handleInputModeSwitch = (event, newMode) => {
     if (newMode !== null) {
-      this.setState({inputMode: newMode});
+      this.setState({ inputMode: newMode });
     }
   }
 
   handleTextInputChange = (event) => {
-    this.setState({textInput: event.target.value})
+    this.setState({ textInput: event.target.value })
+  }
+
+  handleLimitChange = (event) => {
+    this.setState({ limit: event.target.value })
+  }
+
+  handleEmbedInputChange = (event) => {
+    this.setState({ embedInput: event.target.value })
+  }
+
+  handleEmbedRadiusChange = (event) => {
+    this.setState({ embedRadius: event.target.value})
   }
 
   // copySystem = () => {
@@ -783,43 +808,46 @@ class App extends Component {
         addUserToSystem={this.addUserToSystem}
       >
         <div className="App">
-        {/* <Button onClick={this.copySystem}>COPY</Button> */}
-        <Grid>
-          <Snackbar 
-            open={this.state.snackbar}
-            autoHideDuration={6000}
-            onClose={this.handleCloseSnackbar}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-            <Alert onClose={this.handleCloseSnackbar} severity={this.state.alertReason} variant="filled">
-              {this.state.alertMessage}
-            </Alert>
-          </Snackbar>
-        </Grid>
-        <Grid container justify="center" style={{padding: 40}}>
-          <Typography>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
-          <br />
-          <Typography>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
-        </Grid>
+          {/* <Button onClick={this.copySystem}>COPY</Button> */}
+          <Grid>
+            <Snackbar
+              open={this.state.snackbar}
+              autoHideDuration={6000}
+              onClose={this.handleCloseSnackbar}
+              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+              <Alert onClose={this.handleCloseSnackbar} severity={this.state.alertReason} variant="filled">
+                {this.state.alertMessage}
+              </Alert>
+            </Snackbar>
+          </Grid>
+          <Grid container justify="center" style={{ padding: 40 }}>
+            <Typography>Загрузите фото интересующего вас политика (или, для шутки, вас самих), чтобы узнать, как часто тот или иной человек появлялся на ТВ.</Typography>
+            <br />
+            <Typography>Данные за 01.07.20 по 14.09.20 за исключением 30.08.20 и 26.08.20. Телеканал КТРК.</Typography>
+          </Grid>
           <Grid container
             direction="column"
             alignItems="center"
             justify="center">
             <Box>
-                <ToggleButtonGroup
-                  value={this.state.inputMode}
-                  exclusive
-                  size="small"
-                  onChange={this.handleInputModeSwitch}
-                  aria-label="input mode"
-                >
-                  <ToggleButton value="image" aria-label="image">
-                    <Typography style={{paddingRight: 5}}>Фото</Typography><ImageIcon />
-                  </ToggleButton>
-                  <ToggleButton value="text" aria-label="text">
-                    <TitleIcon /><Typography style={{paddingLeft: 5}}>Текст</Typography>
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
+              <ToggleButtonGroup
+                value={this.state.inputMode}
+                exclusive
+                size="small"
+                onChange={this.handleInputModeSwitch}
+                aria-label="input mode"
+              >
+                <ToggleButton value="image" aria-label="image">
+                <ImageIcon /><Typography style={{ paddingLeft: 5 }}>Фото</Typography>
+                </ToggleButton>
+                <ToggleButton value="embed" aria-label="embed">
+                  <DescriptionIcon /><Typography style={{ paddingLeft: 5 }}>Эмбеддинг</Typography>
+                </ToggleButton>
+                <ToggleButton value="text" aria-label="text">
+                  <TitleIcon /><Typography style={{ paddingLeft: 5 }}>Текст</Typography>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
             <Grid container justify="center" style={{
               borderWidth: 3,
               borderRadius: 2,
@@ -829,7 +857,7 @@ class App extends Component {
               position: "relative"
             }}
             >
-              {this.state.inputMode === 'image' ? 
+              {this.state.inputMode === 'image' ?
                 <Box display="flex">
                   <Dropzone handleChange={this.handleFileChange}
                     handleClick={this.handleSnackbarClick}
@@ -841,31 +869,63 @@ class App extends Component {
                     :
                     <Grid style={{ width: 300, borderLeft: '3px dashed black', }}></Grid>
                   }
-                </Box> : 
-                <Box style={{width: 600}}>
-                  <TextField
-                    id="standard-multiline-static"
-                    onChange={this.handleTextInputChange}
-                    multiline
-                    fullWidth
-                    rows={15}
-                    placeholder="Введите текст"
-                    InputProps={{
-                      disableUnderline: true
-                    }}
-                  />
-                </Box>}
+                </Box> : this.state.inputMode === 'embed' ?
+                  <Box style={{ width: 600 }}>
+                    <TextField
+                      id="standard-multiline-static"
+                      onChange={this.handleEmbedInputChange}
+                      multiline
+                      value={this.state.embedInput}
+                      fullWidth
+                      rows={15}
+                      placeholder="Введите текст"
+                      InputProps={{
+                        disableUnderline: true
+                      }}
+                    />
+                  </Box> :
+                  <Box style={{ width: 600 }}>
+                    <TextField
+                      id="standard-multiline-static"
+                      onChange={this.handleTextInputChange}
+                      multiline
+                      value={this.state.textInput}
+                      fullWidth
+                      rows={15}
+                      placeholder="Введите текст"
+                      InputProps={{
+                        disableUnderline: true
+                      }}
+                    />
+                  </Box>
+              }
             </Grid>
             <br />
-            
+
             <Grid container justify="center" alignItems="center">
               <Grid item style={{ padding: 8 }}>
+                {this.state.inputMode === 'image' ?
                 <TextField variant="outlined"
                   id="radius"
                   size="small"
                   label="Схожесть лица"
                   value={this.state.APIRadius}
                   onChange={this.handleAPIRadiusChange} />
+                  : this.state.inputMode === 'embed' ?
+                  <TextField variant="outlined"
+                  id="embedRadius"
+                  size="small"
+                  label="Схожесть текста"
+                  value={this.state.embedRadius}
+                  onChange={this.handleEmbedRadiusChange} /> 
+                  :
+                  <TextField variant="outlined"
+                  id="limit"
+                  size="small"
+                  label="Кол-во предложений"
+                  value={this.state.limit}
+                  onChange={this.handleLimitChange} /> 
+                }
               </Grid>
               <Grid item>
                 <Tooltip title="Найти похожие лица" placement="top">
@@ -893,7 +953,7 @@ class App extends Component {
 
             </Grid>
             <Grid>
-            <FormControl style={{ width: 275, margin: 8 }}>
+              <FormControl style={{ width: 275, margin: 8 }}>
                 <InputLabel id="filter-label">Фильтр</InputLabel>
                 <Select
                   IconComponent={FilterListIcon}
@@ -909,7 +969,7 @@ class App extends Component {
             </Grid>
           </Grid>
           {this.state.showAdvanced &&
-            <Grid style={{paddingTop: 20, paddingBottom: 10}}>
+            <Grid style={{ paddingTop: 20, paddingBottom: 10 }}>
               <TagData
                 tagModeEnabled={this.state.tagModeEnabled}
                 tag={this.state.tag}

@@ -1,6 +1,6 @@
 import { List, Set, Map } from 'immutable';
 
-const TOKEN = 'TDlRJi8ORMGVrMedVkZDXsUDK'
+const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 
 const getImgsFromImg = async (radius, img=null, urls=null) => {
     const formData = new FormData();
@@ -15,8 +15,10 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
         formData.append('file1', img, 'image.jpg');
     }
 
+    console.log(formData)
+
     try {
-        const response = await fetch('https://lukoshkoapi.kloop.io:5000/', {
+        const response = await fetch('https://lukoshkoapi.kloop.io/', {
             method: 'POST',
             body: formData
         });
@@ -37,7 +39,6 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
                 type: 'image',
                 date: new Date(v.appearance_time),
                 box: JSON.parse(v.object_box),
-                facesInFrame: v.objects_in_frame,
                 url: ("https://kloopstorage.blob.core.windows.net/activ-sync/" +
                     frameId + ".jpg"),
                 distance: v.distance,

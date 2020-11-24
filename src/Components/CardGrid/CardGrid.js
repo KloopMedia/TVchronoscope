@@ -8,9 +8,9 @@ import { List } from "immutable"
 import React, { useState, useEffect } from "react";
 import ImageViewer from './ImageViewer'
 
-import TxtCardContent from './TxtCardContent'
-import ImgCardContent from './ImgCardContent'
-
+import Content from './Content'
+import ActionArea from './ActionArea'
+import Actions from './Actions'
 
 const rowsPP = 10;
 
@@ -26,6 +26,7 @@ const CardGrid = props => {
     const [open, setOpen] = useState(false)
     const [image, setImage] = useState(null)
     const [title, setTitle] = useState(null)
+    const [text, setText] = useState(null)
 
     const calculateSlice = (pageNumber, rowsPage, data) => {
         const numberOfPages = Math.floor(data.size / rowsPage) + 1;
@@ -73,13 +74,25 @@ const CardGrid = props => {
     )
 
     const handleOpen = (img_data) => {
-        if (img_data.get('type') !== "text") {
+        if (img_data.get('type') !== "text" && img_data.get('type') !== "embed") {
+            let distance = ''
+            if (img_data.get('distance')) {
+                distance = img_data.get('distance').toFixed(2)
+            }
             const img = img_data.get('url')
-            const distance = img_data.get('distance').toFixed(2)
+            
+
             setOpen(true)
             setImage(img)
             setTitle("Distance " + distance)
+            setText(null)
             console.log(img)
+        } 
+        else {
+            setTitle(img_data.get('sentence'))
+            setText(img_data.get('text'))
+            setImage(null)
+            setOpen(true)
         }
     }
 
@@ -96,58 +109,16 @@ const CardGrid = props => {
             <Grid container justify="center">
                 {dataSlice.map((img_data, i) => (
                     <Grid item key={img_data.get('key')} style={{ padding: 8 }}>
-                        {/* <Card style={{width: 400}}> */}
                         <Card style={{ width: 280 }}>
-                            <CardActionArea onClick={() => handleOpen(img_data)}>
-                                {img_data.get('type') !== "text"
-                                    ?
-                                    <ImgCardContent showAdvanced={props.showAdvanced} img_data={img_data}/>
-                                    :
-                                    <TxtCardContent showAdvanced={props.showAdvanced} img_data={img_data}/>
-                                }
-                            </CardActionArea>
-                            <CardActions style={{ display: 'block', padding: 0 }}>
-                                {props.showAdvanced &&
-                                    <Box>
-                                        <Button size="medium"
-                                            color="primary"
-                                            onClick={() => props.tagClick('tag', i)}>
-                                            TAG
-                            </Button>
-                                        <Button size="medium"
-                                            color="primary"
-                                            onClick={() => props.tagClick('negtag', i)}>
-                                            NEGTAG
-                            </Button>
-                                        <Button size="medium"
-                                            color="primary"
-                                            onClick={() => props.tagClick('untag', i)}>
-                                            UNTAG
-                            </Button>
-                                        <Button size="medium"
-                                            color="primary"
-                                            onClick={() => props.tagClick('clear', i)}>
-                                            CLEAR
-                            </Button>
-                                    </Box>
-                                }
-                                {img_data.get('facesInFrame') === 1 &&
-                                    <Box>
-                                        <Button size="medium"
-                                            color="primary"
-                                            justify="right"
-                                            onClick={() => props.search(i)}>
-                                            ПОИСК
-                                    </Button>
-                                    </Box>
-                                }
-                            </CardActions>
+                            <ActionArea handleOpen={handleOpen} img_data={img_data} showAdvanced={props.showAdvanced} />
+                            <Content img_data={img_data} showAdvanced={props.showAdvanced} />
+                            <Actions i={i} tagClick={props.tagClick} search={props.search} img_data={img_data} showAdvanced={props.showAdvanced} />
                         </Card>
                     </Grid>
                 ))}
             </Grid>
             {pagination}
-            <ImageViewer open={open} handleClose={handleClose} image={image} title={title} />
+            <ImageViewer open={open} handleClose={handleClose} image={image} title={title} text={text} />
         </div>
     )
 }
