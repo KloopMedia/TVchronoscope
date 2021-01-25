@@ -81,7 +81,8 @@ class App extends Component {
     textInput: '',
     embedInput: '',
     limit: 100,
-    embedRadius: 1.5
+    embedRadius: 1.5,
+    table: 'politics'
   }
 
   componentDidMount() {
@@ -539,11 +540,11 @@ class App extends Component {
     }
     else if (this.state.inputMode === 'embed') {
       let input = this.state.embedInput.split(',')
-      data = await getTextsFromEmbed(this.state.embedRadius, input)
+      data = await getTextsFromEmbed(this.state.embedRadius, input, this.state.table)
       console.log(data.toJS())
     }
     else if (this.state.inputMode === 'text') {
-      data = await getTextsFromText(this.state.limit, this.state.textInput)
+      data = await getTextsFromText(this.state.limit, this.state.textInput, this.state.table)
       console.log(data.toJS())
     }
     if (data.size === 0) {
@@ -716,7 +717,11 @@ class App extends Component {
   }
 
   handleEmbedRadiusChange = (event) => {
-    this.setState({ embedRadius: event.target.value})
+    this.setState({ embedRadius: event.target.value })
+  }
+
+  handleTableSelect = (event) => {
+    this.setState({ table: event.target.value })
   }
 
   // copySystem = () => {
@@ -838,7 +843,7 @@ class App extends Component {
                 aria-label="input mode"
               >
                 <ToggleButton value="image" aria-label="image">
-                <ImageIcon /><Typography style={{ paddingLeft: 5 }}>Фото</Typography>
+                  <ImageIcon /><Typography style={{ paddingLeft: 5 }}>Фото</Typography>
                 </ToggleButton>
                 <ToggleButton value="embed" aria-label="embed">
                   <DescriptionIcon /><Typography style={{ paddingLeft: 5 }}>Эмбеддинг</Typography>
@@ -903,28 +908,44 @@ class App extends Component {
             <br />
 
             <Grid container justify="center" alignItems="center">
+              {this.state.inputMode === 'embed' || this.state.inputMode === 'text' ? 
+              <Grid item>
+                <FormControl variant="outlined" size="small" style={{ width: 100 }}>
+                  <InputLabel id="select-table-label">Таблица</InputLabel>
+                  <Select
+                    labelId="select-table-label"
+                    id="select-table"
+                    value={this.state.table}
+                    onChange={this.handleTableSelect}
+                    label="Таблица"
+                  >
+                    <MenuItem value={'politics'}>politics</MenuItem>
+                    <MenuItem value={'news_comments'}>news_comments</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid> : null}
               <Grid item style={{ padding: 8 }}>
                 {this.state.inputMode === 'image' ?
-                <TextField variant="outlined"
-                  id="radius"
-                  size="small"
-                  label="Схожесть лица"
-                  value={this.state.APIRadius}
-                  onChange={this.handleAPIRadiusChange} />
+                  <TextField variant="outlined"
+                    id="radius"
+                    size="small"
+                    label="Схожесть лица"
+                    value={this.state.APIRadius}
+                    onChange={this.handleAPIRadiusChange} />
                   : this.state.inputMode === 'embed' ?
-                  <TextField variant="outlined"
-                  id="embedRadius"
-                  size="small"
-                  label="Схожесть текста"
-                  value={this.state.embedRadius}
-                  onChange={this.handleEmbedRadiusChange} /> 
-                  :
-                  <TextField variant="outlined"
-                  id="limit"
-                  size="small"
-                  label="Кол-во предложений"
-                  value={this.state.limit}
-                  onChange={this.handleLimitChange} /> 
+                    <TextField variant="outlined"
+                      id="embedRadius"
+                      size="small"
+                      label="Схожесть текста"
+                      value={this.state.embedRadius}
+                      onChange={this.handleEmbedRadiusChange} />
+                    :
+                    <TextField variant="outlined"
+                      id="limit"
+                      size="small"
+                      label="Кол-во предложений"
+                      value={this.state.limit}
+                      onChange={this.handleLimitChange} />
                 }
               </Grid>
               <Grid item>

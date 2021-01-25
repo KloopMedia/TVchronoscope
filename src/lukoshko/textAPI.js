@@ -2,12 +2,13 @@ import { List, Set, Map } from 'immutable';
 
 const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 
-const getTextsFromText = async (limit, text=null) => {
+const getTextsFromText = async (limit, text=null, table) => {
     const formData = new FormData();
 
     formData.append('token', TOKEN)
     formData.append('action', 'text_search')
     formData.append('limit', limit)
+    formData.append('table', table)
     // formData.append('with_embeddings', 'False')
     if (text !== null) {
         formData.append('text', text)

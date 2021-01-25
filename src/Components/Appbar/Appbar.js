@@ -18,6 +18,12 @@ import AddIcon from '@material-ui/icons/Add';
 import Dialog from '../SystemDialog/Dialog'
 import Menu from '@material-ui/core/Menu';
 import Avatar from '@material-ui/core/Avatar';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import MenuIcon from '@material-ui/icons/Menu';
+import Divider from '@material-ui/core/Divider'
+import InputLabel from '@material-ui/core/InputLabel'
+
 
 const drawerWidth = 220;
 
@@ -95,6 +101,38 @@ const MenuItem = withStyles({
     }
 })(MuiMenuItem);
 
+// const drawer = (
+//     <div>
+//         <div className={classes.toolbar} />
+//         <Divider />
+//         <nav>
+//             <ul>
+//                 <li>
+//                     <Link to="/">Главная</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/profile">Профиль</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/tasks">Задания</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/request">Получить задание</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/notifications">Уведомления</Link>
+//                 </li>
+//                 {moderator ? <li>
+//                     <Link to="/tasksObserver">Модератор</Link>
+//                 </li> : null}
+//                 {moderator ? <li>
+//                     <Link to="/faq">FAQ для модераторов</Link>
+//                 </li> : null}
+//             </ul>
+//         </nav>
+//     </div>
+// );
+
 export default function PersistentDrawerLeft(props) {
     const { currentUser } = useContext(AuthContext);
     const classes = useStyles();
@@ -161,7 +199,7 @@ export default function PersistentDrawerLeft(props) {
                 })}
             >
                 <Toolbar>
-                    {/* <IconButton
+                    <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         onClick={handleDrawerOpen}
@@ -169,7 +207,7 @@ export default function PersistentDrawerLeft(props) {
                         className={clsx(classes.menuButton, open && classes.hide)}
                     >
                         <MenuIcon />
-                    </IconButton> */}
+                    </IconButton>
                     <Grid container style={{ flexGrow: 1 }}>
                         {/* <img src="https://kloop.kg/wp-content/uploads/2017/01/kloop_transparent_site.png" alt="Kloop.kg - Новости Кыргызстана" style={{ width: 150, height: 'auto' }} /> */}
                         <Typography variant="h5" style={{ color: "black" }}>Лукошко</Typography>
@@ -237,7 +275,7 @@ export default function PersistentDrawerLeft(props) {
                     }
                 </Toolbar>
             </AppBar>
-            {/* <Drawer
+            <Drawer
                 className={classes.drawer}
                 variant="persistent"
                 anchor="left"
@@ -270,11 +308,11 @@ export default function PersistentDrawerLeft(props) {
                 <Grid container>
                     <Typography>System ID: {props.currentSystem}</Typography>
                 </Grid>
-            </Drawer> */}
+            </Drawer>
             <main style={{ padding: 0, height: '100%', background: 'transparent' }}
-                // className={clsx(classes.content, {
-                //     [classes.contentShift]: open,
-                // })}
+                className={clsx(classes.content, {
+                    [classes.contentShift]: open,
+                })}
             >
                 <div className={classes.drawerHeader} />
                 {props.children}

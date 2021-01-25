@@ -28,12 +28,12 @@ const Content = (props) => {
                         </Typography>
                     )
                 }
-                <Typography variant="body2" color="textSecondary" component="div">
+                {/* <Typography variant="body2" color="textSecondary" component="div">
                     {props.showAdvanced ?
                         ('Time: ' + props.img_data.get('date').toISOString())
                         :
                         'Дата: ' + props.img_data.get('date').toISOString().substring(0, 10)}
-                </Typography>
+                </Typography> */}
                 <Typography variant="body2" color="textSecondary" component="div">
                     {props.showAdvanced && ('Negtags: ' + props.img_data.get('negtags'))}
                 </Typography>

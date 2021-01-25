@@ -8,6 +8,7 @@ const getTextsFromEmbed = async (radius, sentences=null) => {
     formData.append('token', TOKEN)
     formData.append('action', 'text_range_search')
     formData.append('radius', radius)
+    formData.append('table', 'politics')
     // formData.append('with_embeddings', 'False')
     if (sentences !== null) {
         formData.append('sentences', sentences)

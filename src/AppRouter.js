@@ -38,6 +38,8 @@ const AppRouter = () => {
             ? <Route exact path={"/"} component={App} />
             : <Route exact path={"/"} component={PublicApp} />
           }
+          <Route exact path={"/text"} component={App} />
+          <Route exact path={"/textembed"} component={App} />
           <Route path="/login" component={Login} />
         </Switch>
       </Router>
