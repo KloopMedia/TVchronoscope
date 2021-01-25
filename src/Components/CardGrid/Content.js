@@ -9,6 +9,7 @@ import {
 const Content = (props) => {
 
     const type = props.img_data.get('type')
+    const date = props.img_data.get('date')
     console.log(props.img_data.get('distance'))
 
     return (
@@ -26,14 +27,14 @@ const Content = (props) => {
                         <Typography variant="body2" color="textSecondary" component="div">
                             Схожесть лица: {props.img_data.get('distance').toFixed(2)}
                         </Typography>
-                    )
+                )
                 }
-                {/* <Typography variant="body2" color="textSecondary" component="div">
+                {!isNaN(date.getTime()) && <Typography variant="body2" color="textSecondary" component="div">
                     {props.showAdvanced ?
-                        ('Time: ' + props.img_data.get('date').toISOString())
+                        ('Time: ' + date.toISOString())
                         :
-                        'Дата: ' + props.img_data.get('date').toISOString().substring(0, 10)}
-                </Typography> */}
+                        'Дата: ' + date.toISOString().substring(0, 10)}
+                </Typography>}
                 <Typography variant="body2" color="textSecondary" component="div">
                     {props.showAdvanced && ('Negtags: ' + props.img_data.get('negtags'))}
                 </Typography>
