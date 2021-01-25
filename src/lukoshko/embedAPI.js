@@ -5,11 +5,9 @@ const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 const getTextsFromEmbed = async (radius, sentences=null) => {
     const formData = new FormData();
 
-    formData.append('token', TOKEN)
-    formData.append('action', 'text_range_search')
     formData.append('radius', radius)
     formData.append('table', 'politics')
-    // formData.append('with_embeddings', 'False')
+
     if (sentences !== null) {
         formData.append('sentences', sentences)
     } 
@@ -19,7 +17,7 @@ const getTextsFromEmbed = async (radius, sentences=null) => {
     }
 
     try {
-        const response = await fetch('https://lukoshkoapi.kloop.io/', {
+        const response = await fetch('https://lukoshkoapi.kloop.io/text_range_search', {
             method: 'POST',
             body: formData
         });

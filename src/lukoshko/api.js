@@ -5,8 +5,6 @@ const TOKEN = 'wqoQbdovWC4KjqD7PA8B'
 const getImgsFromImg = async (radius, img=null, urls=null) => {
     const formData = new FormData();
 
-    formData.append('token', TOKEN)
-    formData.append('action', 'faiss_search')
     formData.append('radius', radius)
     formData.append('with_embeddings', 'False')
     if (img === null) {
@@ -18,7 +16,7 @@ const getImgsFromImg = async (radius, img=null, urls=null) => {
     console.log(formData)
 
     try {
-        const response = await fetch('https://lukoshkoapi.kloop.io/', {
+        const response = await fetch('https://lukoshkoapi.kloop.io/image_range_search', {
             method: 'POST',
             body: formData
         });
