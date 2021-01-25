@@ -81,7 +81,7 @@ class App extends Component {
     textInput: '',
     embedInput: '',
     limit: 100,
-    embedRadius: 1.5,
+    embedRadius: 1,
     table: 'politics'
   }
 
@@ -193,9 +193,9 @@ class App extends Component {
       if (distDiff === 0) {
         return 0
       } else if (distDiff < 0) {
-        return 1
-      } else {
         return -1
+      } else {
+        return 1
       }
     })
     this.setState({
@@ -465,9 +465,16 @@ class App extends Component {
   };
 
   handleSearchClick = (index) => {
-    const url = this.state.pageSlice.get(index).get('url')
-    this.setState({ initialImage: url })
-    this.handlePostData(url);
+    let data = null
+    if (this.state.inputMode === 'image') {
+      data = this.state.pageSlice.get(index).get('url')
+      this.setState({ initialImage: data })
+    }
+    else if (this.state.inputMode === 'embed') {
+      data = this.state.pageSlice.get(index).get('clean_sentence')
+      this.setState({ embedInput: data })
+    }
+    this.handlePostData(data);
   };
 
   handleNestDataClick = () => {
@@ -539,7 +546,15 @@ class App extends Component {
       }
     }
     else if (this.state.inputMode === 'embed') {
-      let input = this.state.embedInput.split(',')
+      let input;
+      if (url) {
+        // input = url.split(',')
+        input = url
+      }
+      else {
+        // input = this.state.embedInput.split(',')
+        input = this.state.embedInput
+      }
       data = await getTextsFromEmbed(this.state.embedRadius, input, this.state.table)
       console.log(data.toJS())
     }

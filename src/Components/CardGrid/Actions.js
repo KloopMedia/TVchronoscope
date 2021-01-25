@@ -32,7 +32,7 @@ const Content = (props) => {
                     </Button>
                 </Box>
             }
-            {(props.img_data.get('type') !== 'text' && props.img_data.get('type') !== 'embed') &&
+            {props.img_data.get('type') !== 'text' &&
                 <Box>
                     <Button size="medium"
                         color="primary"
