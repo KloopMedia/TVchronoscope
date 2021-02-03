@@ -18,6 +18,7 @@
     "ndarray-ops": "^1.2.2",
     "ndarray-scratch": "^1.2.0",
     "numpy-parser": "^1.2.3",
+    "papaparse": "^5.3.0",
     "react": "^16.13.1",
     "react-csv": "^2.0.3",
     "react-dom": "^16.13.1",

@@ -4,6 +4,7 @@ import { extent, nest, timeFormat, sum, timeDays, range } from 'd3';
 import { Button, Grid, TextField, CircularProgress, Typography, IconButton, Tooltip } from '@material-ui/core';
 import { List, Set, Map } from 'immutable';
 import loadImage from 'blueimp-load-image';
+import Papa from 'papaparse'
 
 
 import TagData from './Components/TagData/TagData';
@@ -539,7 +540,12 @@ class App extends Component {
     let data
     console.log(this.state.inputMode)
     if (this.state.inputMode === 'image') {
-      if (this.isInternalLink(url)) {
+      const extenstion = this.state.file.name.split('.').pop();
+      console.log(extenstion)
+      if (extenstion === 'csv' || extenstion === 'tsv' || extenstion === 'xls') {
+        data = await this.parseCsv(this.state.file)
+      }
+      else if (this.isInternalLink(url)) {
         data = await getImgsFromImg(this.state.APIRadius, this.state.file)
       } else {
         data = await getImgsFromImg(this.state.APIRadius, null, [url])
@@ -595,6 +601,30 @@ class App extends Component {
 
   returnPageSlice = (pageSlice) => {
     this.setState({ pageSlice: pageSlice })
+  }
+
+  parseCsv = (file) => {
+    return new Promise(resolve => Papa.parse(file, {
+      header: true,
+      complete: (results) => {
+        let data = {}
+        results.data.forEach((d, i) => {
+          let key = this.state.file.name.split('.')[0] + '_' + i
+          data[key] = Map({
+            key: key,
+            type: 'text',
+            date: new Date(d.date),
+            sentence: d.sentence,
+            tags: Set(d.tags.split(",")),
+            negtags: ("negtags" in d) ? Set(d.negtags.split(",")) : Set([])
+          })
+        })
+        data = Map(data)
+        console.log(data.toJS())
+        resolve(data)
+      }
+    })
+    )
   }
 
   createTagSystem = () => {
@@ -923,22 +953,22 @@ class App extends Component {
             <br />
 
             <Grid container justify="center" alignItems="center">
-              {this.state.inputMode === 'embed' || this.state.inputMode === 'text' ? 
-              <Grid item>
-                <FormControl variant="outlined" size="small" style={{ width: 100 }}>
-                  <InputLabel id="select-table-label">Таблица</InputLabel>
-                  <Select
-                    labelId="select-table-label"
-                    id="select-table"
-                    value={this.state.table}
-                    onChange={this.handleTableSelect}
-                    label="Таблица"
-                  >
-                    <MenuItem value={'politics'}>politics</MenuItem>
-                    <MenuItem value={'news_comments'}>news_comments</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid> : null}
+              {this.state.inputMode === 'embed' || this.state.inputMode === 'text' ?
+                <Grid item>
+                  <FormControl variant="outlined" size="small" style={{ width: 100 }}>
+                    <InputLabel id="select-table-label">Таблица</InputLabel>
+                    <Select
+                      labelId="select-table-label"
+                      id="select-table"
+                      value={this.state.table}
+                      onChange={this.handleTableSelect}
+                      label="Таблица"
+                    >
+                      <MenuItem value={'politics'}>politics</MenuItem>
+                      <MenuItem value={'news_comments'}>news_comments</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid> : null}
               <Grid item style={{ padding: 8 }}>
                 {this.state.inputMode === 'image' ?
                   <TextField variant="outlined"
