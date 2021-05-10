@@ -17,7 +17,7 @@ const getTextsFromText = async (limit, text=null, table) => {
     }
 
     try {
-        const response = await fetch('https://lukoshkoapi.kloop.io/text_search', {
+        const response = await fetch('https://lukoshkoapi.kloop.io/api/v1/text_search/', {
             method: 'POST',
             body: formData
         });

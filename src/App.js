@@ -561,7 +561,7 @@ class App extends Component {
         // input = this.state.embedInput.split(',')
         input = this.state.embedInput
       }
-      data = await getTextsFromEmbed(this.state.embedRadius, input, this.state.table)
+      data = await getTextsFromEmbed(this.state.embedRadius, [input], this.state.table)
       console.log(data.toJS())
     }
     else if (this.state.inputMode === 'text') {
