@@ -191,6 +191,13 @@ export default function PersistentDrawerLeft(props) {
                 createTagSystem={props.createTagSystem}
                 addSystem={props.addSystem}
                 addUserToSystem={props.addUserToSystem}
+                handleSampleNameChange={props.handleSampleNameChange}
+                handleSampleSizeChange={props.handleSampleSizeChange}
+                handleSampleDateChane={props.handleSampleDateChane}
+                handleTestButton={props.handleTestButton}
+                sampleName={props.sampleName}
+                sampleSize={props.sampleSize}
+                sampleDate={props.sampleDate}
             />
             <AppBar
                 position="fixed"

@@ -55,7 +55,7 @@ const styles = (theme) => ({
 
 const MenuItem = withStyles({
   root: {
-      justifyContent: "flex-end"
+    justifyContent: "flex-end"
   }
 })(MuiMenuItem);
 
@@ -93,20 +93,20 @@ export default function CustomizedDialogs(props) {
     <div>
       <Dialog onClose={props.handleClose} aria-labelledby="customized-dialog-title" open={props.open} fullWidth={true} maxWidth={"md"} >
         <DialogTitle id="customized-dialog-title" onClose={props.handleClose}>
-          <Grid container justify="center" style={{paddingRight: 20, paddingLeft: 20}}>
+          <Grid container justify="center" style={{ paddingRight: 20, paddingLeft: 20 }}>
             <FormControl variant="outlined" className={classes.formControl} size="small">
-                <Select
-                    id="select-system"
-                    value={props.currentSystem}
-                    onChange={props.handleSystemChange}
-                >
-                    {props.allSystems.map((system, i) => {
-                        return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
-                    })}
-                </Select>
+              <Select
+                id="select-system"
+                value={props.currentSystem}
+                onChange={props.handleSystemChange}
+              >
+                {props.allSystems.map((system, i) => {
+                  return <MenuItem key={i} value={system.id}>{system.name}</MenuItem>
+                })}
+              </Select>
             </FormControl>
-            <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID системы: <Typography component="span" variant="subtitle2">{props.currentSystem}</Typography></Typography>
-            <Typography variant="body1" style={{flex: 1, alignSelf: "center"}}>ID пользователя: <Typography component="span" variant="subtitle2">{props.userId}</Typography></Typography>
+            <Typography variant="body1" style={{ flex: 1, alignSelf: "center" }}>ID системы: <Typography component="span" variant="subtitle2">{props.currentSystem}</Typography></Typography>
+            <Typography variant="body1" style={{ flex: 1, alignSelf: "center" }}>ID пользователя: <Typography component="span" variant="subtitle2">{props.userId}</Typography></Typography>
           </Grid>
         </DialogTitle>
         <DialogContent>
@@ -172,8 +172,40 @@ export default function CustomizedDialogs(props) {
             </Grid>
           </Box>
         </DialogContent>
-        <DialogActions>
-
+        <DialogActions style={{justifyContent: 'center'}}>
+          <Box display="flex" justifyItems="center" p={2}>
+            <Grid container direction="column" display="flex" justify="center" alignItems="center">
+              <Grid container alignItems="center" display="flex" justify="center">
+                <TextField size="small"
+                  className={classes.textfield}
+                  style={{ margin: 3, width: 200 }}
+                  value={props.sampleName}
+                  InputProps={{
+                    disableUnderline: true
+                  }} onChange={props.handleSampleNameChange} placeholder="Наименование выборки" />
+                <TextField size="small"
+                  className={classes.textfield}
+                  value={props.sampleSize}
+                  style={{ margin: 3, width: 160 }}
+                  InputProps={{
+                    disableUnderline: true
+                  }} type="number" onChange={props.handleSampleSizeChange} placeholder="Размер выборки" />
+                <TextField size="small"
+                  className={classes.textfield}
+                  value={props.sampleDate}
+                  style={{ margin: 3, width: 160 }}
+                  InputProps={{
+                    disableUnderline: true
+                  }} type="date" onChange={props.handleSampleDateChane} />
+              </Grid>
+              <Grid container alignItems="center" display="flex" justify="center">
+                <Button
+                  disabled={props.sampleName.length === 0 && props.sampleSize === 0}
+                  onClick={props.handleTestButton} variant="contained"
+                  className={classes.button} >Загрузить комментарии</Button>
+              </Grid>
+            </Grid>
+          </Box>
         </DialogActions>
       </Dialog>
     </div>

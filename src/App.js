@@ -83,7 +83,10 @@ class App extends Component {
     embedInput: '',
     limit: 100,
     embedRadius: 1,
-    table: 'politics'
+    table: 'politics',
+    sampleName: '',
+    sampleSize: 0,
+    sampleDate: ''
   }
 
   componentDidMount() {
@@ -438,19 +441,36 @@ class App extends Component {
       }
       console.log(filter)
       console.log(tag)
-      firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          console.log(doc.id, doc.data())
-          let { tags, negtags, date, ...docData } = doc.data()
-          data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
+      if (filter.length > 0) {
+        firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            console.log(doc.id, doc.data())
+            let { tags, negtags, date, ...docData } = doc.data()
+            data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
+          })
+        }).then(() => {
+          console.log(data)
+          data = Map(data)
+          data = data.merge(this.state.data)
+          this.setState({ data: data })
+          this.allFilter()
         })
-      }).then(() => {
-        console.log(data)
-        data = Map(data)
-        data = data.merge(this.state.data)
-        this.setState({ data: data })
-        this.allFilter()
-      })
+      }
+      else {
+        firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").get().then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            console.log(doc.id, doc.data())
+            let { tags, negtags, date, ...docData } = doc.data()
+            data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
+          })
+        }).then(() => {
+          console.log(data)
+          data = Map(data)
+          data = data.merge(this.state.data)
+          this.setState({ data: data })
+          this.allFilter()
+        })
+      }
     }
     else {
       this.allFilter(null, false, tag)
@@ -824,6 +844,33 @@ class App extends Component {
 
   static contextType = AuthContext
 
+  handleSampleNameChange = (e) => {
+    this.setState({sampleName: e.target.value})
+  }
+
+  handleSampleSizeChange = (e) => {
+    this.setState({sampleSize: e.target.value})
+  }
+
+  handleSampleDateChane = (e) => {
+    this.setState({sampleDate: e.target.value})
+  }
+
+  handleTestButton = () => {
+    console.log('test')
+    if (this.state.sampleName && this.state.sampleName !== '' && this.state.sampleSize > 0) {
+      firebase.firestore().collection('requests').add({
+        name: this.state.sampleName,
+        size: this.state.sampleSize,
+        userId: this.context.currentUser.uid,
+        email: this.context.currentUser.email,
+        date: this.state.sampleDate
+      }).then(() => {
+        this.setState({snackbar: true, alertMessage: 'Запрос выполнен', alertReason: 'success'})
+      })
+    }
+  }
+
   render() {
     let charts = null;
     if (this.state.showCharts) {
@@ -856,9 +903,17 @@ class App extends Component {
         createTagSystem={this.createTagSystem}
         addSystem={this.addSystem}
         addUserToSystem={this.addUserToSystem}
+        handleSampleNameChange={this.handleSampleNameChange}
+        handleSampleSizeChange={this.handleSampleSizeChange}
+        handleSampleDateChane={this.handleSampleDateChane}
+        handleTestButton={this.handleTestButton}
+        sampleName={this.state.sampleName}
+        sampleSize={this.state.sampleSize}
+        sampleDate={this.state.sampleDate}
       >
         <div className="App">
           {/* <Button onClick={this.copySystem}>COPY</Button> */}
+
           <Grid>
             <Snackbar
               open={this.state.snackbar}
@@ -1031,7 +1086,8 @@ class App extends Component {
                   <MenuItem value="">Все</MenuItem>
                   {this.state.allTags.map((tag, i) => <MenuItem key={i} value={tag}>{tag}</MenuItem>)}
                 </Select>
-              </FormControl>
+                <Button onClick={this.handleFilterClick}>Filter</Button>
+              </FormControl>  
             </Grid>
           </Grid>
           {this.state.showAdvanced &&
