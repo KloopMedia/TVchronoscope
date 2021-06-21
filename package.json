@@ -13,6 +13,7 @@
     "echarts-for-react": "^2.0.16",
     "firebase": "^7.21.1",
     "immutable": "^4.0.0-rc.12",
+    "lodash": "^4.17.21",
     "mathjs": "^7.0.0",
     "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2",

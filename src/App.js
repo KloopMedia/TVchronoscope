@@ -50,6 +50,9 @@ class App extends Component {
     nestedAllTags: [],
     nestedAllTagsDates: {},
     timeRange: [],
+    distinctDates: [],
+    sampleConfidence: [],
+    nestedSample: [],
     externalToolTip: "",
     tagModeEnabled: false,
     showCharts: false,
@@ -86,7 +89,9 @@ class App extends Component {
     table: 'politics',
     sampleName: '',
     sampleSize: 0,
-    sampleDate: ''
+    sampleDate: '',
+    dateFilter: '',
+    shuffle: false
   }
 
   componentDidMount() {
@@ -223,12 +228,28 @@ class App extends Component {
     }
   }
 
-  tagRow = (action, index) => {
-    if (this.state.tag !== "" || action === 'clear') {
+  tagRow = (action, index, tag = null) => {
+    if (this.state.tag !== "" || tag || action === 'clear') {
       let data = this.state.data;
+      let newTag;
+      console.log(tag)
+      console.log(this.state.tag)
+      if (tag) {
+        newTag = tag
+      }
+      else if (this.state.tag !== "") {
+        newTag = this.state.tag
+      }
+      else if (action === 'clear') {
+
+      }
+      else {
+        this.setState({ alertReason: 'warning', snackbar: true, alertMessage: 'Заполните поле Tag' })
+        return;
+      }
       const row = this.getUpdatedTags(action,
         this.state.pageSlice.get(index),
-        this.state.tag)
+        newTag)
       data = data.set(row.get("key"), row)
 
       this.setState({
@@ -240,7 +261,12 @@ class App extends Component {
       // this.setState({
       //   filteredData: this.state.filteredData.delete(index)
       // })
-      this.allFilter(data.toList(), true)
+      if (this.state.filter) {
+        this.allFilter(data.toList(), false, this.state.filter)
+      }
+      else {
+        this.allFilter(data.toList(), true)
+      }
 
     } else {
       if (action !== 'clear') {
@@ -249,8 +275,18 @@ class App extends Component {
     }
   }
 
-  updateFirestore = async (action, row, tag) => {
+  updateFirestore = async (action, row, tagsToUpdate) => {
     let docExist = false
+    let tag;
+    if (Array.isArray(tagsToUpdate)) {
+      console.log("TAAAAG ARRAY", tagsToUpdate)
+      tag = [...tagsToUpdate]
+    }
+    else {
+      console.log("TAAAAG STRING", tagsToUpdate)
+      tag = [tagsToUpdate]
+    }
+    console.log("TAAAAG", tag)
     const docKey = row.get("key")
     const { tags, negtags, ...body } = row.toJS()
     let rootRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem)
@@ -271,8 +307,8 @@ class App extends Component {
 
     if (action === 'tag') {
       const docData = {
-        tags: firebase.firestore.FieldValue.arrayUnion(tag),
-        negtags: firebase.firestore.FieldValue.arrayRemove(tag),
+        tags: firebase.firestore.FieldValue.arrayUnion(...tag),
+        negtags: firebase.firestore.FieldValue.arrayRemove(...tag),
         modified: firebase.firestore.FieldValue.serverTimestamp(),
         ...body
       }
@@ -283,12 +319,12 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({ tags: firebase.firestore.FieldValue.arrayUnion(tag) })
+      rootRef.update({ tags: firebase.firestore.FieldValue.arrayUnion(...tag) })
     }
     else if (action === 'negtag') {
       const docData = {
-        tags: firebase.firestore.FieldValue.arrayRemove(tag),
-        negtags: firebase.firestore.FieldValue.arrayUnion(tag),
+        tags: firebase.firestore.FieldValue.arrayRemove(...tag),
+        negtags: firebase.firestore.FieldValue.arrayUnion(...tag),
         modified: firebase.firestore.FieldValue.serverTimestamp(),
         ...body
       }
@@ -299,12 +335,12 @@ class App extends Component {
       else {
         frameRef.set(docData)
       }
-      rootRef.update({ negtags: firebase.firestore.FieldValue.arrayUnion(tag) })
+      rootRef.update({ negtags: firebase.firestore.FieldValue.arrayUnion(...tag) })
     }
     else if (action === 'untag') {
       const docData = {
-        tags: firebase.firestore.FieldValue.arrayRemove(tag),
-        negtags: firebase.firestore.FieldValue.arrayRemove(tag),
+        tags: firebase.firestore.FieldValue.arrayRemove(...tag),
+        negtags: firebase.firestore.FieldValue.arrayRemove(...tag),
         modified: firebase.firestore.FieldValue.serverTimestamp(),
         ...body
       }
@@ -326,6 +362,7 @@ class App extends Component {
   }
 
   getUpdatedTags = (action, row, tag) => {
+    console.log("UPDATE TAG:", row, tag)
     if (action === 'tag') {
       row = row.update("tags", d => d.add(tag))
       row = row.update("negtags", d => d.delete(tag))
@@ -339,7 +376,7 @@ class App extends Component {
       row = row.update("tags", d => d.clear())
       row = row.update("negtags", d => d.clear())
     }
-    this.updateFirestore(action, row, this.state.tag)
+    this.updateFirestore(action, row, tag)
     return row;
   }
 
@@ -349,6 +386,18 @@ class App extends Component {
     return data.filter(d => (d.date.getTime() >= startTime &&
       d.date.getTime() <= endTime))
   };
+
+  dateConverter = (d) => {
+    let month = d.getMonth() + 1
+    if (month < 10) {
+      month = '0' + month
+    }
+    let day = d.getDate()
+    if (day < 10) {
+      day = '0' + day
+    }
+    return `${day}.${month}.${d.getFullYear()}`
+  }
 
   nestData = () => {
     let flatData = []
@@ -363,6 +412,32 @@ class App extends Component {
       flatData.push(tmp)
     }))
     console.log("flatData", flatData)
+    let dates = data.map(({ date: d }) => this.dateConverter(d))
+    console.log('dates', dates)
+    let distinctDates = Set(dates).toArray().sort((a, b) => new Date(a) - new Date(b))
+    console.log("DISTINCT DATES", distinctDates)
+    let nestedSample = nest().key(d => this.dateConverter(d.date))
+      .key(d => d.tags)
+      .rollup(values => sum(values, d => +1))
+      .entries(flatData);
+    let dateSize = nest().key(d => this.dateConverter(d.date))
+      .rollup(values => sum(values, d => +1))
+      .entries(data);
+    console.log("nestedSample", nestedSample)
+    console.log("dateSize", dateSize)
+    let confidence = nestedSample.map(date => {
+      let n = dateSize.filter(d => d.key === date.key).pop().value
+      console.log("size", n)
+      return date.values.map(tag => {
+        let p = tag.value / n
+        let upper = p + 1.96 * Math.sqrt((p * (1 - p) / n))
+        let lower = p - 1.96 * Math.sqrt((p * (1 - p) / n))
+        return {tag: tag.key, date: date.key, upper: upper, lower: lower, value: p}
+      })
+    })
+    confidence.sort((a, b) => new Date(a[0].date) - new Date(b[0].date))
+    nestedSample.sort((a,b) => new Date(a.key) - new Date(b.key))
+    console.log("confidence",confidence)
     //Select time unit
     let day = timeFormat("%U");//timeFormat("%Y-%m-%d");
     //Determine data time extent given time unit
@@ -408,7 +483,10 @@ class App extends Component {
       nestedPercentData: zeroPaddedPercent,
       nestedAllTags: nestedAllTags,
       nestedAllTagsDates: nestedAllTagsDates,
-      timeRange: timeRange
+      timeRange: timeRange,
+      distinctDates: distinctDates,
+      nestedSample: nestedSample,
+      sampleConfidence: confidence
     })
   }
 
@@ -429,46 +507,93 @@ class App extends Component {
     });
   };
 
-  handleFilterClick = (tag = null) => {
+  shuffleArray(array) {
+    console.log('test')
+    var currentIndex = array.length,  randomIndex;
+    console.log("BEFORE SHUFFLE", array)
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+    console.log("AFTER SHUFFLE", array)
+  
+    return array;
+  }
+
+  handleFilterClick = (tag = null, date = null) => {
     if (this.state.filterAll) {
       let data = {}
       let filter = "";
+      let filterDate = ""
       if (tag) {
         filter = tag
       }
       else {
         filter = this.state.filter
       }
+      if (date) {
+        filterDate = date
+      }
+      else {
+        filterDate = this.state.dateFilter
+      }
       console.log(filter)
       console.log(tag)
+      console.log("filterDate", filterDate)
+      let systemRef = firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames")
+      if (filterDate.length > 0) {
+        filterDate = new Date(filterDate)
+        let endDate = new Date(filterDate)
+        endDate.setDate(filterDate.getDate() + 1)
+        systemRef = systemRef.where("date", '>=', filterDate).where("date", '<=', endDate)
+        console.log("DATES", filterDate, endDate)
+      }
       if (filter.length > 0) {
-        firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").where("tags", "array-contains", filter).get().then(querySnapshot => {
+        systemRef.where("tags", "array-contains", filter).get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
             console.log(doc.id, doc.data())
             let { tags, negtags, date, ...docData } = doc.data()
             data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
           })
         }).then(() => {
-          console.log(data)
+          console.log("DATA", data)
           data = Map(data)
           data = data.merge(this.state.data)
-          this.setState({ data: data })
-          this.allFilter()
+          if (this.state.shuffle) {
+            this.allShuffle(data)
+          }
+          else {
+            this.setState({ data: data })
+            this.allFilter()
+          }
         })
       }
       else {
-        firebase.firestore().collection("tagSystems").doc(this.state.currentSystem).collection("frames").get().then(querySnapshot => {
+        systemRef.get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
             console.log(doc.id, doc.data())
             let { tags, negtags, date, ...docData } = doc.data()
             data[doc.data().key] = Map({ tags: Set(tags), negtags: Set(negtags), date: date.toDate(), ...docData })
           })
         }).then(() => {
-          console.log(data)
+          console.log("DATA", data)
           data = Map(data)
-          data = data.merge(this.state.data)
-          this.setState({ data: data })
-          this.allFilter()
+          if (this.state.shuffle) {
+            console.log("DDT", data)
+            this.allShuffle(data)
+          }
+          else {
+            this.setState({ data: data })
+            this.allFilter()
+          }
         })
       }
     }
@@ -481,8 +606,8 @@ class App extends Component {
     this.tagAll(action);
   };
 
-  handleRowRemoval = (action, index) => {
-    this.tagRow(action, index);
+  handleRowRemoval = (action, index, tag = null) => {
+    this.tagRow(action, index, tag);
   };
 
   handleSearchClick = (index) => {
@@ -743,6 +868,12 @@ class App extends Component {
     this.handleFilterClick(tag)
   }
 
+  handleDateFilterChange = (event) => {
+    let date = event.target.value
+    this.setState({ dateFilter: date })
+    // this.handleFilterClick()
+  }
+
   handleTagsHide = (event) => {
     this.setState({ hideTags: event.target.checked })
   }
@@ -845,18 +976,18 @@ class App extends Component {
   static contextType = AuthContext
 
   handleSampleNameChange = (e) => {
-    this.setState({sampleName: e.target.value})
+    this.setState({ sampleName: e.target.value })
   }
 
   handleSampleSizeChange = (e) => {
-    this.setState({sampleSize: e.target.value})
+    this.setState({ sampleSize: e.target.value })
   }
 
   handleSampleDateChane = (e) => {
-    this.setState({sampleDate: e.target.value})
+    this.setState({ sampleDate: e.target.value })
   }
 
-  handleTestButton = () => {
+  requestSampleButton = () => {
     console.log('test')
     if (this.state.sampleName && this.state.sampleName !== '' && this.state.sampleSize > 0) {
       firebase.firestore().collection('requests').add({
@@ -866,9 +997,48 @@ class App extends Component {
         email: this.context.currentUser.email,
         date: this.state.sampleDate
       }).then(() => {
-        this.setState({snackbar: true, alertMessage: 'Запрос выполнен', alertReason: 'success'})
+        this.setState({ snackbar: true, alertMessage: 'Запрос выполнен', alertReason: 'success' })
       })
     }
+  }
+
+  negTagAllFrames = () => {
+    let data = this.state.data;
+    let negtags = this.state.allTags
+    this.state.data.forEach((row, i) => {
+      if (row.get("tags").size === 0) {
+        console.log('no tags')
+        let d = this.getUpdatedTags('negtag',
+          row,
+          negtags)
+        data = data.set(d.get("key"), d)
+      }
+    })
+    this.setState({ data: data })
+    this.allFilter(data.toList(), true)
+  }
+
+  allShuffle = (d) => {
+    let data = d
+    console.log(data.toJS())
+    console.log(typeof data)
+    let [...keys] = data.keys()
+    let shuffled = this.shuffleArray(keys)
+    console.log(shuffled)
+    let count = 0
+    data = data.mapKeys((k) => {
+      console.log(shuffled[count])
+      let newKey = shuffled[count]
+      count = count + 1
+      return newKey
+    })
+    this.setState({data: data})
+    this.allFilter(data.toList())
+    console.log(data.toJS())
+  }
+
+  handleShuffleOptionChange = (event) => {
+    this.setState({shuffle: event.target.checked})
   }
 
   render() {
@@ -876,17 +1046,19 @@ class App extends Component {
     if (this.state.showCharts) {
       charts = <Charts
         externalToolTip={this.state.externalToolTip}
-        timeRange={this.state.timeRange}
         nestedData={this.state.nestedData}
         nestedAllTags={this.state.nestedAllTags}
         nestedAllTagsDates={this.state.nestedAllTagsDates}
         timeRange={this.state.timeRange}
+        distinctDates={this.state.distinctDates}
         nestedPercentData={this.state.nestedPercentData}
         slider={this.state.slider}
         handleSliderChange={this.handleSliderChange}
         handleSliderCommitted={this.handleSliderCommitted}
         handleNestDataClick={this.handleNestDataClick}
         handleExternalToolTip={this.handleExternalToolTip}
+        nestedSample={this.state.nestedSample}
+        sampleConfidence={this.state.sampleConfidence}
       />
     }
 
@@ -906,14 +1078,14 @@ class App extends Component {
         handleSampleNameChange={this.handleSampleNameChange}
         handleSampleSizeChange={this.handleSampleSizeChange}
         handleSampleDateChane={this.handleSampleDateChane}
-        handleTestButton={this.handleTestButton}
+        requestSampleButton={this.requestSampleButton}
         sampleName={this.state.sampleName}
         sampleSize={this.state.sampleSize}
         sampleDate={this.state.sampleDate}
       >
         <div className="App">
           {/* <Button onClick={this.copySystem}>COPY</Button> */}
-
+          {/* <Button onClick={() => this.allShuffle()}>Shuffle</Button> */}
           <Grid>
             <Snackbar
               open={this.state.snackbar}
@@ -1086,8 +1258,13 @@ class App extends Component {
                   <MenuItem value="">Все</MenuItem>
                   {this.state.allTags.map((tag, i) => <MenuItem key={i} value={tag}>{tag}</MenuItem>)}
                 </Select>
-                <Button onClick={this.handleFilterClick}>Filter</Button>
-              </FormControl>  
+                <br />
+                <TextField size="small"
+                  value={this.state.dateFilter}
+                  type="date" onChange={this.handleDateFilterChange} />
+                <br />
+                <Button variant="outlined" onClick={this.handleFilterClick}>Filter</Button>
+              </FormControl>
             </Grid>
           </Grid>
           {this.state.showAdvanced &&
@@ -1101,6 +1278,7 @@ class App extends Component {
                 hideNegtags={this.state.hideNegtags}
                 filterAll={this.state.filterAll}
                 showCharts={this.state.showCharts}
+                shuffle={this.state.shuffle}
                 handleFilterAllChange={this.handleFilterAllChange}
                 handleTagsHide={this.handleTagsHide}
                 handleNegtagsHide={this.handleNegtagsHide}
@@ -1109,7 +1287,9 @@ class App extends Component {
                 handleTagTextChange={this.handleTagTextChange}
                 handleTagClick={this.handleTagClick}
                 handleTagModeChange={this.handleTagModeChange}
-                handleShowCharts={this.handleShowCharts} />
+                handleShowCharts={this.handleShowCharts}
+                handleShuffleOptionChange={this.handleShuffleOptionChange}
+                />
               {/* <Button onClick={this.handleShowCharts}>Show charts</Button> */}
               {charts}
             </Grid>
@@ -1119,7 +1299,9 @@ class App extends Component {
           <CardGrid data={this.state.filteredData}
             inputMode={this.state.inputMode}
             search={this.handleSearchClick}
+            allTags={this.state.allTags}
             tagClick={this.handleRowRemoval}
+            negTagAllFrames={this.negTagAllFrames}
             showAdvanced={this.state.showAdvanced}
             returnRowsPerPage={this.returnRowsPerPage}
             returnCurrentPage={this.returnCurrentPage}

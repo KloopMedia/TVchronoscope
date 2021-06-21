@@ -3,8 +3,48 @@ import React, { Component } from 'react';
 import {
 
     CardContent, Grid, Typography,
-    Box
+    Box,
+    Button,
+    Menu,
+    MenuItem
 } from "@material-ui/core";
+
+
+const SimpleMenu = (props) => {
+    const [anchorEl, setAnchorEl] = React.useState(null);
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleOptionClick = (tag) => {
+        props.tagClick('tag', props.i, tag)
+        handleClose()
+    }
+
+    return (
+        <div>
+            <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
+                Add tag
+            </Button>
+            <Menu
+                id="simple-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+            >
+                {props.allTags.length > 0 && props.allTags.map(tag => <MenuItem onClick={() => handleOptionClick(tag)}>{tag}</MenuItem>)}
+            </Menu>
+        </div>
+    );
+}
+
+
 
 const Content = (props) => {
 
@@ -15,6 +55,7 @@ const Content = (props) => {
     return (
         <CardContent>
             <Box>
+                <SimpleMenu i={props.i} allTags={props.allTags} tagClick={props.tagClick} />
                 <Typography gutterBottom variant="h6" component="h2">
                     {props.showAdvanced && ('Tags: ' + props.img_data.get('tags'))}
                 </Typography>

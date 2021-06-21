@@ -200,8 +200,8 @@ export default function CustomizedDialogs(props) {
               </Grid>
               <Grid container alignItems="center" display="flex" justify="center">
                 <Button
-                  disabled={props.sampleName.length === 0 && props.sampleSize === 0}
-                  onClick={props.handleTestButton} variant="contained"
+                  disabled={props.sampleName.length === 0 && props.sampleSize === '0' && props.sampleDate === ''}
+                  onClick={props.requestSampleButton} variant="contained"
                   className={classes.button} >Загрузить комментарии</Button>
               </Grid>
             </Grid>

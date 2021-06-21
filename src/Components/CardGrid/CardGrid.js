@@ -111,12 +111,13 @@ const CardGrid = props => {
                     <Grid item key={img_data.get('key')} style={{ padding: 8 }}>
                         <Card style={{ width: 280 }}>
                             <ActionArea handleOpen={handleOpen} img_data={img_data} showAdvanced={props.showAdvanced} />
-                            <Content img_data={img_data} showAdvanced={props.showAdvanced} />
+                            <Content i={i} tagClick={props.tagClick} allTags={props.allTags} img_data={img_data} showAdvanced={props.showAdvanced} />
                             <Actions i={i} tagClick={props.tagClick} search={props.search} img_data={img_data} showAdvanced={props.showAdvanced} />
                         </Card>
                     </Grid>
                 ))}
             </Grid>
+            {dataSlice.size > 0 && <Button onClick={props.negTagAllFrames}>Finish</Button>}
             {pagination}
             <ImageViewer open={open} handleClose={handleClose} image={image} title={title} text={text} />
         </div>

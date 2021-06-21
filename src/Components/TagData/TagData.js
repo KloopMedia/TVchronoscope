@@ -27,23 +27,23 @@ const useStyles = makeStyles((theme) => ({
 
 const AntSwitch = withStyles((theme) => ({
     root: {
-      width: 60,
-    //   height: 16,
-    //   padding: 0,
-      display: 'flex',
+        width: 60,
+        //   height: 16,
+        //   padding: 0,
+        display: 'flex',
     },
     switchBase: {
-      
-      color: theme.palette.common.white,
-      '&$checked': {
-        transform: 'translateX(22px)',
+
         color: theme.palette.common.white,
-        '& + $track': {
-          opacity: 1,
-          backgroundColor: '#52d869',
-          borderColor: '#52d869',
+        '&$checked': {
+            transform: 'translateX(22px)',
+            color: theme.palette.common.white,
+            '& + $track': {
+                opacity: 1,
+                backgroundColor: '#52d869',
+                borderColor: '#52d869',
+            },
         },
-      },
     },
     // thumb: {
     //   width: 12,
@@ -51,14 +51,14 @@ const AntSwitch = withStyles((theme) => ({
     //   boxShadow: 'none',
     // },
     track: {
-      border: `1px solid ${theme.palette.common.white}`,
-      borderRadius: 9,
-      opacity: 1,
-      backgroundColor: theme.palette.grey[500],
+        border: `1px solid ${theme.palette.common.white}`,
+        borderRadius: 9,
+        opacity: 1,
+        backgroundColor: theme.palette.grey[500],
     },
     checked: {},
-  }))(Switch);
-  
+}))(Switch);
+
 
 
 const tagData = (props) => {
@@ -112,7 +112,7 @@ const tagData = (props) => {
                             disabled={props.tag.length === 0}
                             onClick={() => props.handleTagClick('tag')}>
                             Tag all
-                    </Button>
+                        </Button>
                     </Grid>
                     <Grid item style={{ padding: 8 }}>
                         <Button
@@ -120,43 +120,49 @@ const tagData = (props) => {
                             disabled={props.tag.length === 0}
                             onClick={() => props.handleTagClick('negtag')}>
                             Negtag all
-                    </Button>
+                        </Button>
                     </Grid>
 
-                {/* </Grid> */}
-                {/* <Divider orientation="vertical" variant="middle" style={{ marginRight: 5, marginLeft: 5}} /> */}
-                {/* <Grid container style={{display: "block"}} xs={5}> */}
+                    {/* </Grid> */}
+                    {/* <Divider orientation="vertical" variant="middle" style={{ marginRight: 5, marginLeft: 5}} /> */}
+                    {/* <Grid container style={{display: "block"}} xs={5}> */}
                     {/* <Grid item> <FormControlLabel
                     control={<Switch checked={props.tagModeEnabled}
                                      onChange={props.handleTagModeChange}/>}
                     label="Hide (neg)tagged"
                 /></Grid> */}
-                <Box display="flex" pl={1}>
-                    <Grid item> <FormControlLabel
-                        control={<AntSwitch checked={props.hideTags}
-                            onChange={props.handleTagsHide} />}
-                        label="Hide tagged"
-                        labelPlacement="bottom"
-                    />
-                    </Grid>
-                    <Grid item> <FormControlLabel
-                        control={<AntSwitch checked={props.hideNegtags}
-                            onChange={props.handleNegtagsHide} />}
-                        label="Hide negtagged"
-                        labelPlacement="bottom"
-                    /></Grid>
-                    <Grid item> <FormControlLabel
-                        control={<AntSwitch checked={props.filterAll}
-                            onChange={props.handleFilterAllChange} />}
-                        label="Filter all"
-                        labelPlacement="bottom"
-                    /></Grid>
-                    <Grid item> <FormControlLabel
-                        control={<AntSwitch checked={props.showCharts}
-                            onChange={props.handleShowCharts} />}
-                        label="Show charts"
-                        labelPlacement="bottom"
-                    /></Grid>
+                    <Box display="flex" pl={1}>
+                        <Grid item> <FormControlLabel
+                            control={<AntSwitch checked={props.shuffle}
+                                onChange={props.handleShuffleOptionChange} />}
+                            label="Shuffle"
+                            labelPlacement="bottom"
+                        /></Grid>
+                        <Grid item> <FormControlLabel
+                            control={<AntSwitch checked={props.hideTags}
+                                onChange={props.handleTagsHide} />}
+                            label="Hide tagged"
+                            labelPlacement="bottom"
+                        />
+                        </Grid>
+                        <Grid item> <FormControlLabel
+                            control={<AntSwitch checked={props.hideNegtags}
+                                onChange={props.handleNegtagsHide} />}
+                            label="Hide negtagged"
+                            labelPlacement="bottom"
+                        /></Grid>
+                        <Grid item> <FormControlLabel
+                            control={<AntSwitch checked={props.filterAll}
+                                onChange={props.handleFilterAllChange} />}
+                            label="Filter all"
+                            labelPlacement="bottom"
+                        /></Grid>
+                        <Grid item> <FormControlLabel
+                            control={<AntSwitch checked={props.showCharts}
+                                onChange={props.handleShowCharts} />}
+                            label="Show charts"
+                            labelPlacement="bottom"
+                        /></Grid>
                     </Box>
                 </Grid>
             </Box>

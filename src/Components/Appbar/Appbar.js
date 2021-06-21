@@ -194,7 +194,7 @@ export default function PersistentDrawerLeft(props) {
                 handleSampleNameChange={props.handleSampleNameChange}
                 handleSampleSizeChange={props.handleSampleSizeChange}
                 handleSampleDateChane={props.handleSampleDateChane}
-                handleTestButton={props.handleTestButton}
+                requestSampleButton={props.requestSampleButton}
                 sampleName={props.sampleName}
                 sampleSize={props.sampleSize}
                 sampleDate={props.sampleDate}
